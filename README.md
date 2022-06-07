@@ -21,9 +21,10 @@ For Skills you can also select the ability it depends on.
 
 ![immagine](https://user-images.githubusercontent.com/3662610/172491827-b39cc739-e230-453f-aa87-db7adfe9cf82.png)
 
-After saving Characters owned by any player will get updated (sometime you may need to close and reopen the character sheet.)
+After saving Characters owned by any player will get updated ( you may need to close and reopen the character sheet.)
 
-![immagine](https://user-images.githubusercontent.com/3662610/172492693-4eabc391-5577-466c-b75c-b79e3e503fe7.png)
+![immagine](https://user-images.githubusercontent.com/3662610/172493447-940c44b3-64b0-433e-9744-a209c7ae5c74.png)
+
 
 You can normally click on new skills or ability to make a roll, add proficiencies etc.
 
