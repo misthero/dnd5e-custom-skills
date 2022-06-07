@@ -37,15 +37,49 @@ div#cs-debug_box span {
     cursor: not-allowed;
 }
 
-.dnd5e-custom-skills .skill_element {
-    padding: 3px;
-    margin: 0 10px;
+.dnd5e-custom-skills input[type="number"] {
+    width: 2em;
+    text-align: center;
+    margin-left: 1em;
 }
 
-.dnd5e-custom-skills .skill_element .skill_apply {
+.dnd5e-custom-skills .skill_element,
+.dnd5e-custom-skills .ability_element {
+    padding: 3px;
+}
+
+.dnd5e-custom-skills .skill_element .skill_apply, 
+.dnd5e-custom-skills .ability_element .ability_apply {
   text-align:center;
 }
 
-.dnd5e-custom-skills .skill_element:nth-child(even) {
+.dnd5e-custom-skills .skill_element:nth-child(even), 
+.dnd5e-custom-skills .ability_element:nth-child(even) {
     background: rgba(0, 0, 0, 0.05);
+}
+
+form .form-group.hide-abilities > label,
+form .form-group.hide-skills > label {
+  flex-basis:25%;
+  cursor:pointer;
+}
+
+form .form-group.hide-abilities h3,
+form .form-group.hide-skills h3 {
+  flex-basis:100%;
+}
+
+form .form-group.hide-abilities input, form .form-group.hide-skills input {
+    width: auto;
+    height: auto;
+    vertical-align: middle;
+}
+
+.sheet.actor .ability-scores .ability.disabled,
+.sheet.actor.character ul.skills-list li.skill.disabled {
+  display:none;
+}
+
+.form-group.hide-abilities, .form-group.hide-skills {
+
 }

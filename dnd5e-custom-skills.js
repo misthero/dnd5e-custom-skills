@@ -16,6 +16,13 @@ Handlebars.registerHelper("csFormat", (path, ...args) => {
     return game.i18n.format(path, args[0].hash);
 });
 
+Handlebars.registerHelper("inObject", (object, value) => {
+  console.log(object, value);
+  if (typeof object != 'undefined')
+    return Object.values(object).includes(value)
+  return false;
+});
+
 /**
  * CUSTOM SKILLS APPLICATION SETTINGS FORM
  */
@@ -32,7 +39,7 @@ class CustomSkillsForm extends FormApplication {
   }
 
   getData(options) {
-      let data = mergeObject({ abilities: CONFIG.DND5E.abilities }, this.reset ? CustomSkills.defaultSettings : CustomSkills.settings);
+      let data = mergeObject({ abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills }, this.reset ? CustomSkills.defaultSettings : CustomSkills.settings);
       console.log('getData ', data);
       console.log('getData options', options);
       return data;
@@ -40,6 +47,7 @@ class CustomSkillsForm extends FormApplication {
 
   onReset() {
       this.reset = true;
+      game.settings.set(MODULE_NAME, 'settings', {});
       this.render();
   }
 
@@ -78,6 +86,7 @@ class CustomSkillsForm extends FormApplication {
         }
         
         if (Form.abilitiesNum < oldSettings.abilitiesNum) {
+          console.log('LESS ABILITIES');
           newAbilities = mergeObject(Form.customAbilitiesList, oldSettings.customAbilitiesList, { insertKeys: false, insertValues: false, overwrite:false  });
           for (let removekey in oldSettings.customAbilitiesList) {
             if (typeof newAbilities[removekey] == 'undefined') {
@@ -156,9 +165,7 @@ Hooks.on('init', () => {
     //console.log('CONFIG.DND5E.abilites', CONFIG.DND5E.abilities); //default skills
     //CONFIG.debug.hooks = true;
     //game.dnd5e.config.skills['cus_0'] = 'Ombra';
-
-
-
+    
     game.settings.registerMenu(MODULE_NAME, MODULE_NAME, {
         name: MODULE_NAME + ".form",
         label: MODULE_NAME + ".form-title",
@@ -168,7 +175,7 @@ Hooks.on('init', () => {
         scope: "world",
         restricted: true
     });
-
+    
     game.settings.register(MODULE_NAME, "settings", {
         name: "Custom Skills Settings",
         scope: "world",
@@ -177,9 +184,8 @@ Hooks.on('init', () => {
         config: false,
         //onChange: (x) => window.location.reload()
     });
-
+    
     CustomSkills.applyToSystem();
-
 });
 
 class CustomSkills {
@@ -188,6 +194,8 @@ class CustomSkills {
       let csSettings = mergeObject(this.defaultSettings, game.settings.get(MODULE_NAME, 'settings'));
       // skills
       const oldSkillNum = Object.keys(csSettings.customSkillList).length;
+      const oldAbilityNum = Object.keys(csSettings.customAbilitiesList).length;
+      
       if (csSettings.skillNum > oldSkillNum) {
         let skills = {};
         for (let n = oldSkillNum; n < csSettings.skillNum; n++){
@@ -202,6 +210,20 @@ class CustomSkills {
         }
       }
       
+      if (csSettings.abilitiesNum > oldAbilityNum) {
+        let abilities = {};
+        for (let n = oldAbilityNum; n < csSettings.abilitiesNum; n++){
+          let name = 'cua_' + n;
+          abilities[name] = {label: "", applied: false};
+        }
+        csSettings.customAbilitiesList = mergeObject(csSettings.customAbilitiesList, abilities);
+      } else if (csSettings.abilitiesNum < oldAbilityNum) {
+        for (let n = (oldAbilityNum - 1); n >= csSettings.abilitiesNum; n--){
+          let name = 'cua_' + n;
+          delete csSettings.customAbilitiesList[name];
+        }
+      }
+      
       return csSettings;
     }
 
@@ -209,6 +231,7 @@ class CustomSkills {
      * Get default settings object.
      */
     static get defaultSettings() {
+       
         /** skills **/
         const skillNum = 5;
         let skills = {};
@@ -229,7 +252,9 @@ class CustomSkills {
           customSkillList: skills,
           skillNum : skillNum,
           customAbilitiesList: abilities,
-          abilitiesNum : abilitiesNum
+          abilitiesNum : abilitiesNum,
+          hiddenAbilities : {},
+          hiddenSkills : {}
         };
     }
     
@@ -267,6 +292,14 @@ class CustomSkills {
     static getCustomAbilitiesList() {
         let csSettings = CustomSkills.settings;
         return csSettings.customAbilitiesList;
+    }
+    static getHiddenAbilities() {
+        let csSettings = CustomSkills.settings;
+        return csSettings.hiddenAbilities;
+    }
+    static getHiddenSkills() {
+        let csSettings = CustomSkills.settings;
+        return csSettings.hiddenSkills;
     }
 
     /* 
@@ -346,7 +379,7 @@ class CustomSkills {
         if (keys.length > 0) {
             keys.forEach((key, index) => {
                 let Actor = charactersToAddSkill[key];
-                CustomSkills.debug('Adding skill "' + skillToAdd.label + '" to:' + Actor.name);
+                console.log('Removing skill "' + skillToAdd.label + '" from:' + Actor.name);
                 let updatedData = {
                     [`data.skills.${skillCode}`]: skillToAdd
                 };
@@ -366,7 +399,7 @@ class CustomSkills {
         if (keys.length > 0) {
             keys.forEach((key, index) => {
                 let Actor = charactersToRemoveSkills[key];
-                CustomSkills.debug('Removing skill "' + skillToRemove.label + '" from:' + Actor.name);
+                console.log('Removing skill "' + skillToRemove.label + '" from:' + Actor.name);
                 Actor.update({
                     ['data.skills.-=' + skillCode]: null
                 });
@@ -393,7 +426,6 @@ class CustomSkills {
     }
     
     static removeAbilityFromActors(abilityCode) {
-      console.log('REMOVE FROM ACTOR',abilityCode);
         let abilitiesList = this.getCustomAbilitiesList();
         let characters = this.getPlayerActors();
         let charactersToRemoveAbility = characters.filter(s => s.data.data.abilities.hasOwnProperty(abilityCode));
@@ -410,9 +442,20 @@ class CustomSkills {
             })
         }
     }
+    
+    /** TODO remove all from actor
+    find all property starting with
+    example:  let found = CustomSkills.findValueByPrefix(Actor.data.data.skills, 'cus_');*/
+  static findValueByPrefix(object, prefix) {
+    for (var property in object) {
+      if (object.hasOwnProperty(property) && 
+         property.toString().startsWith(prefix)) {
+         //return object[property];
+         return property;
+      }
+    }
+  }
 }
-
-
 
 function addLabels(app, html, data) {
     console.log('DND5E', game.dnd5e);
@@ -422,6 +465,8 @@ function addLabels(app, html, data) {
     html.find(".ability-scores").addClass("custom-abilities");
 
     const skillList = CustomSkills.getCustomSkillList();
+    const hiddenSkills = CustomSkills.getHiddenSkills();
+    const hiddenAbilities = CustomSkills.getHiddenAbilities();
     const skillRowSelector = ".skills-list .skill";
 
     html.find(skillRowSelector).each(function() {
@@ -432,7 +477,19 @@ function addLabels(app, html, data) {
             data.data.skills[skillKey].label = skillList[skillKey].label;
             skillElem.find(".skill-name").text(skillList[skillKey].label);
         }
+        
     });
+    for (let hs in hiddenSkills) {
+      if (hiddenSkills[hs])
+        $('.skills-list .skill[data-skill="'+hs+'"]', html).addClass('disabled');
+    }
+    
+    for (let ha in hiddenAbilities) {
+      console.log('SHEET HIDDEN ABILITIES', ha, hiddenAbilities[ha]);
+      if (hiddenAbilities[ha])
+        $('.ability-scores .ability[data-ability ="'+ha+'"]', html).addClass('disabled');
+    }
+
     return (app, html, data);
 }
 
