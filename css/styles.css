@@ -1,0 +1,51 @@
+.skill_label {}
+.skill_name {}
+.skill_ability {}
+
+
+div#cs-debug_box {
+    height: 6em;
+    background: #333;
+    border-radius: 3px;
+    overflow-y: auto;
+    color: #4fda4f;
+    padding: 10px;
+    font-size: 11px;
+    font-family: sans-serif;
+    margin: 10px;
+    border: 5px solid #333;
+}
+
+div#cs-debug_box span {
+  display:block;
+}
+
+#skill_input_template {
+  display:none;
+}
+
+.dnd5e.sheet.actor.character ul.skills-list.custom-skills,
+.dnd5e.sheet.actor .ability-scores.custom-abilities {
+    height: 100%;
+    overflow: auto;
+}
+
+.dnd5e-custom-skills input[type="text"][readonly],
+.dnd5e-custom-skills select[readonly] {
+    opacity: 0.7;
+    box-shadow: 0 0 0;
+    cursor: not-allowed;
+}
+
+.dnd5e-custom-skills .skill_element {
+    padding: 3px;
+    margin: 0 10px;
+}
+
+.dnd5e-custom-skills .skill_element .skill_apply {
+  text-align:center;
+}
+
+.dnd5e-custom-skills .skill_element:nth-child(even) {
+    background: rgba(0, 0, 0, 0.05);
+}

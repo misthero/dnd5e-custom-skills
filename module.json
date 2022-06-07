@@ -1,0 +1,42 @@
+{
+    "name": "dnd5e-custom-skills",
+    "title": "Custom Skills 5e",
+    "description": "FoundryVTT module for editing character sheet skills",
+    "version": "1.0.0",
+    "minimumCoreVersion": "0.7.6",
+    "compatibleCoreVersion": "0.7.7",
+    "url": "https://github.com/misthero/dnd5e-custom-skills",
+    "manifest": "https://raw.githubusercontent.com/misthero/dnd5e-custom-skills/main/module.json",
+    "download": "https://github.com/misthero/dnd5e-custom-skills/archive/main.zip",
+    "system": ["dnd5e"],
+    "includes": [
+        "./assets/**",
+        "./lang/**",
+        "./scripts/**",
+        "./styles/**",
+        "./templates/**",
+        "./module.json"
+    ],
+    "authors": [
+      {
+        "name": "misthero",
+        "url": "https://github.com/misthero"
+      }
+    ],
+    "esmodules": [
+        "./dnd5e-custom-skills.js"
+    ],
+    "styles": ["css/styles.css"],
+    "languages": [
+      {
+        "lang": "en",
+        "name": "English",
+        "path": "lang/en.json"
+      },
+      {
+        "lang": "it",
+        "name": "Italiano",
+        "path": "lang/it.json"
+      }
+    ]
+}

@@ -1,0 +1,117 @@
+<div class="tab active" data-tab="general">
+    <h2>{{localize "dnd5e-custom-skills.poptitle"}}</h2>
+
+    <form autocomplete="off" class="dnd5e-custom-skills" id="dnd5ecustomskillsform">
+        <div class="form-group">
+            <div class="label">{{localize "dnd5e-custom-skills.skillNumLabel"}}</div>
+            <input name="skillNum" type="number" min="1" max="20" value="{{skillNum}}" />
+        </div>
+        <div class="custom-skill-list">
+            {{#each customSkillList as |skilldata n|}}
+            <div class="form-group skill_element {{n}}">
+                <div class="skill_name">
+                    <div class="label">{{localize "dnd5e-custom-skills.skillInput"}}</div>
+                    <input {{#if skilldata.applied}}readonly{{/if}} type="text" name="customSkillList.{{n}}.label" data-dtype="string" value="{{ skilldata.label }}" />
+                </div>
+                <div class="skill_ability">
+                    <div class="label">{{localize "dnd5e-custom-skills.skillAbility"}}</div>
+                    <select data-skill="{{n}}" class="ability_select" {{#if skilldata.applied}}disabled{{/if}} id="select_{{n}}" style="flex: 1;">
+                    {{#each ../abilities as |name key|}}
+                      <option {{#if (eq key skilldata.ability )}} selected {{/if}} value="{{key}}">{{name}}</option>
+                    {{/each}}
+                    </select>
+                    <input type="hidden" name="customSkillList.{{n}}.ability" value="{{skilldata.ability}}" />
+                </div>
+                <div class="skill_apply" data-skill="{{n}}" data-tooltip="{{localize " dnd5e-custom-skills.skillApply "}}">
+                    <div class="label">{{localize "dnd5e-custom-skills.skillApply"}}</div>
+                    <input type="checkbox" class="apply_skill" data-skill="{{n}}" name="customSkillList.{{n}}.applied" data-dtype="Boolean" {{checked skilldata.applied}}/>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        <hr>
+
+        <div class="form-group">
+            <div class="label">{{localize "dnd5e-custom-skills.abilitiesNumLabel"}}</div>
+            <input name="abilitiesNum" type="number" min="1" max="20" value="{{abilitiesNum}}" />
+        </div>
+        <div class="custom-abilities-list">
+            {{#each customAbilitiesList as |abilitydata a|}}
+            <div class="form-group ability_element {{a}}">
+                <div class="ability_name">
+                    <div class="label">{{localize "dnd5e-custom-skills.abilityInput"}}</div>
+                    <input {{#if abilitydata.applied}}readonly{{/if}} type="text" name="customAbilitiesList.{{a}}.label" data-dtype="string" value="{{ abilitydata.label }}" />
+                </div>
+                <div class="ability_apply" data-ability="{{a}}" data-tooltip="{{localize " dnd5e-custom-skills.abilityApply "}}">
+                    <div class="label">{{localize "dnd5e-custom-skills.abilityApply"}}</div>
+                    <input type="checkbox" class="apply_ability" data-ability="{{a}}" name="customAbilitiesList.{{a}}.applied" data-dtype="Boolean" {{checked abilitydata.applied}}/>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+
+        <div id="cs-debug_box"></div>
+        <!-- 
+    <div class="form-group">
+      <label>{{localize "dnd5e-spellpoints.resourceLabel"}}</label>
+      <input type="text" name="spResource" data-dtype="string" value="{{ spResource }}"/>
+      <p class="notes">{{localize "dnd5e-spellpoints.resourceNote"}}</p>
+    </div>
+    
+    <div class="form-group">
+      <label>{{localize "dnd5e-spellpoints.mixedLabel"}}</label>
+      <input type="checkbox" name="spMixedMode" data-dtype="Boolean" {{checked spMixedMode}}/>
+      <p class="notes">{{localize "dnd5e-spellpoints.mixedMode"}}</p>
+    </div>
+      
+    <div class="form-group">
+      <label>{{localize "dnd5e-spellpoints.autoLabel"}}</label>
+      <input type="checkbox" name="spAutoSpellpoints" data-dtype="Boolean" {{checked spAutoSpellpoints}}/>
+      <p class="notes">{{localize "dnd5e-spellpoints.autoNote"}}</p>
+    </div>
+
+    <div class="form-group">
+      <label>{{localize "dnd5e-spellpoints.formulaLabel"}}</label>
+      <select name="spFormula" style="flex: 1;">
+        {{#select spFormula}}
+          {{#each spFormulas as |name key|}}
+            <option value="{{key}}">{{name}}</option>
+          {{/each}}
+        {{/select}}
+      </select>
+    </div>
+    <hr>
+    <p><b>{{localize "dnd5e-spellpoints.spellPointsCostsTitle"}}</b></p>
+    {{#each spellPointsCosts as |cost level|}}
+    <div class="form-group">
+      <label>{{ spFormat "dnd5e-spellpoints.costLabel" slotLevel=level }}</label>
+      <input style="flex:0.2;text-align:right;" max="999" min="0" size="3" name="spellPointsCosts.{{level}}" value="{{ cost }}" type="number" data-dtype="number"/>
+    </div>
+    {{/each}}
+    <p>{{localize "dnd5e-spellpoints.spellPointsCostsNote"}}</p>
+    
+    <hr>
+    <p><b>{{localize "dnd5e-spellpoints.AMTitle"}}</b></p>
+    <p class="notes">{{localize "dnd5e-spellpoints.AMNotes"}}</p>
+    <p class="notes">{{localize "dnd5e-spellpoints.AMInstructions"}} <a href="https://www.dmsguild.com/product/272967/Advanced-Magic--Spell-Points-System-5e">{{localize "dnd5e-spellpoints.AMLinkLabel"}}</a> {{localize "dnd5e-spellpoints.AMInstructions2"}}</p>
+    <div class="form-group">
+      <label>{{localize "dnd5e-spellpoints.enableVariantLabel"}}</label>
+      <input type="checkbox" name="spEnableVariant" data-dtype="Boolean" {{checked spEnableVariant}}/>
+      <p class="notes">{{localize "dnd5e-spellpoints.enableVariantNote"}}</p>
+    </div>
+    <div class="form-group">
+      <label>{{localize "dnd5e-spellpoints.spLifeCostLabel"}}</label>
+      <input style="flex:0.2;text-align:right;" max="999" min="0" size="3" type="number" data-dtype="number" name="spLifeCost" value="{{ spLifeCost }}"/>
+      <p class="notes">{{localize "dnd5e-spellpoints.spLifeCostNote"}}</p>
+    </div>
+
+    <hr>
+    -->
+        <div class="form-group" style="margin: 10px;">
+            <button type="submit" name="submit"><i class="fas fa-save"></i> {{localize "dnd5e-custom-skills.save"}}</button>
+            <button type="button" name="reset"><i class="fas fa-undo"></i> {{localize "dnd5e-custom-skills.reset"}}</button>
+        </div>
+
+
+    </form>
+</div>
