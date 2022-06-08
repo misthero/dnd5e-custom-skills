@@ -1,8 +1,8 @@
 {
-    "dnd5e-custom-skills.poptitle": "Custom Skills 5e Configuration",
-    "dnd5e-custom-skills.form": "Click the button to open your world Custom Skills configuration",
-    "dnd5e-custom-skills.form-hint": "You can add new Custom Skills or change default skills.",
-    "dnd5e-custom-skills.form-title": "Custom Skills configuration",
+    "dnd5e-custom-skills.poptitle": "Custom Abilities & Skills Configuration",
+    "dnd5e-custom-skills.form": "Click the button to open configuration",
+    "dnd5e-custom-skills.form-hint": "Use this to add new skills and abilities or hide default one",
+    "dnd5e-custom-skills.form-title": "Custom Abilities & Skills Configuration",
     "dnd5e-custom-skills.skillInput": "Skill Name",
     "dnd5e-custom-skills.skillAbility": "Default Ability",
     "dnd5e-custom-skills.skillApply": "Add Skill to every existing PC actor",

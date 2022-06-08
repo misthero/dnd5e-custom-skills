@@ -1,15 +1,13 @@
 const MODULE_NAME = 'dnd5e-custom-skills';
-
+CONFIG.debug.hooks = true
 var __awaiter = (this && this.__awaiter) || function(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function(resolve) { resolve(value); }); }
-    return new(P || (P = Promise))(function(resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+  function adopt(value) { return value instanceof P ? value : new P(function(resolve) { resolve(value); }); }
+  return new(P || (P = Promise))(function(resolve, reject) {
+    function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+    function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+    function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
 
 Handlebars.registerHelper("csFormat", (path, ...args) => {
@@ -17,14 +15,14 @@ Handlebars.registerHelper("csFormat", (path, ...args) => {
 });
 
 Handlebars.registerHelper("inObject", (object, value) => {
-  console.log(object, value);
   if (typeof object != 'undefined')
     return Object.values(object).includes(value)
   return false;
 });
 
 /**
- * CUSTOM SKILLS APPLICATION SETTINGS FORM
+ *  ▄▀▀░█▒█░▄▀▀░▀█▀░▄▀▄░█▄▒▄█░░░▄▀▀░█▄▀░█░█▒░░█▒░░▄▀▀░░▒▄▀▄▒█▀▄▒█▀▄░█▒░░█░▄▀▀▒▄▀▄░▀█▀░█░▄▀▄░█▄░█░░░▄▀▀▒██▀░▀█▀░▀█▀░█░█▄░█░▄▀▒░▄▀▀░░▒█▀░▄▀▄▒█▀▄░█▄▒▄█
+░*  ▀▄▄░▀▄█▒▄██░▒█▒░▀▄▀░█▒▀▒█▒░▒▄██░█▒█░█▒█▄▄▒█▄▄▒▄██▒░░█▀█░█▀▒░█▀▒▒█▄▄░█░▀▄▄░█▀█░▒█▒░█░▀▄▀░█▒▀█▒░▒▄██░█▄▄░▒█▒░▒█▒░█░█▒▀█░▀▄█▒▄██▒░░█▀░▀▄▀░█▀▄░█▒▀▒█
  */
 class CustomSkillsForm extends FormApplication {
     
@@ -40,87 +38,77 @@ class CustomSkillsForm extends FormApplication {
 
   getData(options) {
       let data = mergeObject({ abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills }, this.reset ? CustomSkills.defaultSettings : CustomSkills.settings);
-      console.log('getData ', data);
-      console.log('getData options', options);
       return data;
   }
 
   onReset() {
       this.reset = true;
       game.settings.set(MODULE_NAME, 'settings', {});
+      CustomSkills.cleanActors();
       this.render();
   }
 
   _updateObject(event, formData) {
-      return __awaiter(this, void 0, void 0, function* () {
-        let Form = mergeObject({},formData , { insertKeys: true, insertValues: true, overwrite: true });
-        let formLenght = Object.keys(Form.customSkillList).length;
-        let settingsLength =  Object.keys(CustomSkills.settings.customSkillList).length;
-        
-        const oldSettings = CustomSkills.settings;
-        console.log('Form',Form);
-        console.log('formData',formData);
-        console.log('oldSettings',oldSettings);
-        
-        let newSkills;
-        let newAbilities;
-        let newSettings = mergeObject(oldSettings, Form);
-        
-        if (Form.skillNum < oldSettings.skillNum) {
-          newSkills = mergeObject(Form.customSkillList, oldSettings.customSkillList, { insertKeys: false, insertValues: false, overwrite:false  });
-          for (let removekey in oldSettings.customSkillList) {
-            if (typeof newSkills[removekey] == 'undefined') {
-              CustomSkills.removeSkillFromActors(removekey);
-              applyToSystem(removekey);
-            }
-          }
-        } else {
-          newSkills = mergeObject(oldSettings.customSkillList, Form.customSkillList, { insertKeys: true, insertValues: true, overwrite:true });
-        };
-        
-        for (let s in newSkills) {
-          if(newSkills[s].applied)
-            CustomSkills.addSkillToActors(s)
-          else
-            CustomSkills.removeSkillFromActors(s);
-        }
-        
-        if (Form.abilitiesNum < oldSettings.abilitiesNum) {
-          console.log('LESS ABILITIES');
-          newAbilities = mergeObject(Form.customAbilitiesList, oldSettings.customAbilitiesList, { insertKeys: false, insertValues: false, overwrite:false  });
-          for (let removekey in oldSettings.customAbilitiesList) {
-            if (typeof newAbilities[removekey] == 'undefined') {
-              CustomSkills.removeAbilityFromActors(removekey);
-              applyToSystem(removekey);
-            }
-          }
-        } else {
-          newAbilities = mergeObject(oldSettings.customAbilitiesList, Form.customAbilitiesList, { insertKeys: true, insertValues: true, overwrite:true });
-        };
-        
-        for (let a in newAbilities) {
-          if(newAbilities[a].applied)
-            CustomSkills.addAbilityToActor(a);
-          else
-            CustomSkills.removeAbilityFromActors(a);
-        }
-        
-        console.log('newSkills',newSkills);
-        console.log('newAbilities',newAbilities);
-        newSettings.customSkillList = newSkills;
-        newSettings.customAbilitiesList = newAbilities;
-        
-        yield game.settings.set(MODULE_NAME, 'settings', newSettings);
-
-        CustomSkills.applyToSystem();
-        this.render();
+    return __awaiter(this, void 0, void 0, function* () {
+      let Form = mergeObject({},formData , { insertKeys: true, insertValues: true, overwrite: true });
+      const oldSettings = CustomSkills.settings;
       
-      })
+      let newSkills;
+      let newAbilities;
+      let newSettings = mergeObject(oldSettings, Form);
+      
+      /** check if skills have been added or removed **/
+      if (Form.skillNum < oldSettings.skillNum) {
+        newSkills = mergeObject(Form.customSkillList, oldSettings.customSkillList, { insertKeys: false, insertValues: false, overwrite:false  });
+        for (let removekey in oldSettings.customSkillList) {
+          if (typeof newSkills[removekey] == 'undefined') {
+            applyToSystem(removekey);
+          }
+        }
+      } else {
+        newSkills = mergeObject(oldSettings.customSkillList, Form.customSkillList, { insertKeys: true, insertValues: true, overwrite:true });
+      };
+      
+      /** check if abilities have been added or removed **/
+      if (Form.abilitiesNum < oldSettings.abilitiesNum) {
+        newAbilities = mergeObject(Form.customAbilitiesList, oldSettings.customAbilitiesList, { insertKeys: false, insertValues: false, overwrite:false  });
+        for (let removekey in oldSettings.customAbilitiesList) {
+          if (typeof newAbilities[removekey] == 'undefined') {
+            applyToSystem(removekey);
+          }
+        }
+      } else {
+        newAbilities = mergeObject(oldSettings.customAbilitiesList, Form.customAbilitiesList, { insertKeys: true, insertValues: true, overwrite:true });
+      };
+      
+      newSettings.customSkillList = newSkills;
+      newSettings.customAbilitiesList = newAbilities;
+      
+      // update settings
+      yield game.settings.set(MODULE_NAME, 'settings', newSettings);
+      
+      // finally add skills and abilities to actors
+      for (let s in newSkills) {
+        if(newSkills[s].applied)
+          CustomSkills.addSkillToActors(s)
+      }
+      
+      for (let a in newAbilities) {
+        if(newAbilities[a].applied == true)
+          CustomSkills.addAbilityToActor(a);
+      }
+      
+      // modify system variables
+      CustomSkills.applyToSystem();
+      // clean leftovers on players actors
+      CustomSkills.cleanActors();
+      this.render();
+    })
   }
     
   activateListeners(html) {
-      super.activateListeners(html);
-      html.find('button[name="reset"]').click(this.onReset.bind(this));
+    super.activateListeners(html);
+    html.find('button[name="reset"]').click(this.onReset.bind(this));
   }
     
   async _onChangeInput(event){
@@ -162,349 +150,363 @@ class CustomSkillsForm extends FormApplication {
 
 Hooks.on('init', () => {
     console.log('dnd5e-custom-skills init');
-    //console.log('CONFIG.DND5E.abilites', CONFIG.DND5E.abilities); //default skills
     //CONFIG.debug.hooks = true;
-    //game.dnd5e.config.skills['cus_0'] = 'Ombra';
     
     game.settings.registerMenu(MODULE_NAME, MODULE_NAME, {
-        name: MODULE_NAME + ".form",
-        label: MODULE_NAME + ".form-title",
-        hint: MODULE_NAME + ".form-hint",
-        icon: "fas fa-cog",
-        type: CustomSkillsForm,
-        scope: "world",
-        restricted: true
+      name: MODULE_NAME + ".form",
+      label: MODULE_NAME + ".form-title",
+      hint: MODULE_NAME + ".form-hint",
+      icon: "fas fa-cog",
+      type: CustomSkillsForm,
+      scope: "world",
+      restricted: true
     });
     
     game.settings.register(MODULE_NAME, "settings", {
-        name: "Custom Skills Settings",
-        scope: "world",
-        default: CustomSkillsForm.defaultSettings,
-        type: Object,
-        config: false,
-        //onChange: (x) => window.location.reload()
+      name: "Custom Skills Settings",
+      scope: "world",
+      default: CustomSkillsForm.defaultSettings,
+      type: Object,
+      config: false,
+      //onChange: (x) => window.location.reload()
     });
     
-    CustomSkills.applyToSystem();
+    
 });
 
+/* 
+*░▄▀▀░█▒█░▄▀▀░▀█▀░▄▀▄░█▄▒▄█░░░▄▀▀░█▄▀░█░█▒░░█▒░░░░▄▀▀░█▒░▒▄▀▄░▄▀▀░▄▀▀
+*░▀▄▄░▀▄█▒▄██░▒█▒░▀▄▀░█▒▀▒█▒░▒▄██░█▒█░█▒█▄▄▒█▄▄▒░░▀▄▄▒█▄▄░█▀█▒▄██▒▄██
+*/
+
 class CustomSkills {
-
-    static get settings() {
-      let csSettings = mergeObject(this.defaultSettings, game.settings.get(MODULE_NAME, 'settings'));
-      // skills
-      const oldSkillNum = Object.keys(csSettings.customSkillList).length;
-      const oldAbilityNum = Object.keys(csSettings.customAbilitiesList).length;
-      
-      if (csSettings.skillNum > oldSkillNum) {
-        let skills = {};
-        for (let n = oldSkillNum; n < csSettings.skillNum; n++){
-          let name = 'cus_' + n;
-          skills[name] = this.getBaseSkill();
-        }
-        csSettings.customSkillList = mergeObject(csSettings.customSkillList, skills);
-      } else if (csSettings.skillNum < oldSkillNum) {
-        for (let n = (oldSkillNum - 1); n >= csSettings.skillNum; n--){
-          let name = 'cus_' + n;
-          delete csSettings.customSkillList[name];
-        }
+  static get settings() {
+    let csSettings = mergeObject(this.defaultSettings, game.settings.get(MODULE_NAME, 'settings'));
+    // skills
+    const oldSkillNum = Object.keys(csSettings.customSkillList).length;
+    const oldAbilityNum = Object.keys(csSettings.customAbilitiesList).length;
+    
+    if (csSettings.skillNum > oldSkillNum) {
+      let skills = {};
+      for (let n = oldSkillNum; n < csSettings.skillNum; n++){
+        let name = 'cus_' + n;
+        skills[name] = this.getBaseSkill();
       }
-      
-      if (csSettings.abilitiesNum > oldAbilityNum) {
-        let abilities = {};
-        for (let n = oldAbilityNum; n < csSettings.abilitiesNum; n++){
-          let name = 'cua_' + n;
-          abilities[name] = {label: "", applied: false};
-        }
-        csSettings.customAbilitiesList = mergeObject(csSettings.customAbilitiesList, abilities);
-      } else if (csSettings.abilitiesNum < oldAbilityNum) {
-        for (let n = (oldAbilityNum - 1); n >= csSettings.abilitiesNum; n--){
-          let name = 'cua_' + n;
-          delete csSettings.customAbilitiesList[name];
-        }
+      csSettings.customSkillList = mergeObject(csSettings.customSkillList, skills);
+    } else if (csSettings.skillNum < oldSkillNum) {
+      for (let n = (oldSkillNum - 1); n >= csSettings.skillNum; n--){
+        let name = 'cus_' + n;
+        delete csSettings.customSkillList[name];
       }
-      
-      return csSettings;
-    }
-
-    /**
-     * Get default settings object.
-     */
-    static get defaultSettings() {
-       
-        /** skills **/
-        const skillNum = 5;
-        let skills = {};
-        for (let n = 0; n < skillNum; n++) {
-            let name = 'cus_' + n;
-            skills[name] = this.getBaseSkill();
-        };
-        
-        /** abilities **/
-        const abilitiesNum = 2;
-        let abilities = {};
-        for (let n = 0; n < abilitiesNum; n++) {
-            let name = 'cua_' + n;
-            abilities[name] = {label: "", applied: false};
-        };
-        
-        return {
-          customSkillList: skills,
-          skillNum : skillNum,
-          customAbilitiesList: abilities,
-          abilitiesNum : abilitiesNum,
-          hiddenAbilities : {},
-          hiddenSkills : {}
-        };
     }
     
-    static getBaseSkill() {
-      return {
-          ability: "str",
-          bonus: 0,
-          mod: 0,
-          passive: 0,
-          prof: 0,
-          total: 0,
-          value: 0,
-          label: "",
-          applied: 0
-      };
+    if (csSettings.abilitiesNum > oldAbilityNum) {
+      let abilities = {};
+      for (let n = oldAbilityNum; n < csSettings.abilitiesNum; n++){
+        let name = 'cua_' + n;
+        abilities[name] = {label: "", applied: false};
+      }
+      csSettings.customAbilitiesList = mergeObject(csSettings.customAbilitiesList, abilities);
+    } else if (csSettings.abilitiesNum < oldAbilityNum) {
+      for (let n = (oldAbilityNum - 1); n >= csSettings.abilitiesNum; n--){
+        let name = 'cua_' + n;
+        delete csSettings.customAbilitiesList[name];
+      }
     }
+    
+    return csSettings;
+  }
 
-    static debug(string) {
-        $('#cs-debug_box').append('<span>' + string + '<span>');
-    }
+  /**
+   * Get default settings object.
+   */
+  static get defaultSettings() {
+   
+    /** skills **/
+    const skillNum = 5;
+    let skills = {};
+    for (let n = 0; n < skillNum; n++) {
+      let name = 'cus_' + n;
+      skills[name] = this.getBaseSkill();
+    };
+    
+    /** abilities **/
+    const abilitiesNum = 2;
+    let abilities = {};
+    for (let n = 0; n < abilitiesNum; n++) {
+      let name = 'cua_' + n;
+      abilities[name] = {label: "", applied: false};
+    };
+    
+    return {
+      customSkillList: skills,
+      skillNum : skillNum,
+      customAbilitiesList: abilities,
+      abilitiesNum : abilitiesNum,
+      hiddenAbilities : {},
+      hiddenSkills : {}
+    };
+  }
+  
+  static getBaseSkill() {
+    return {
+      ability: "str",
+      bonus: 0,
+      mod: 0,
+      passive: 0,
+      prof: 0,
+      total: 0,
+      value: 0,
+      label: "",
+      applied: 0
+    };
+  }
 
-    static isActorCharacter(actor) {
-        return getProperty(actor, "type") == "character";
-    }
+  static debug(string) {
+    $('#cs-debug_box').append('<span>' + string + '<span>');
+  }
 
-    /* get actors with hasPlayerOwner property **/
-    static getPlayerActors() {
-        return game.actors.filter(a => a.hasPlayerOwner === true);
-    }
+  static isActorCharacter(actor) {
+    return getProperty(actor, "type") == "character";
+  }
 
-    static getCustomSkillList() {
-        let csSettings = CustomSkills.settings;
-        return csSettings.customSkillList;
-    }
-    static getCustomAbilitiesList() {
-        let csSettings = CustomSkills.settings;
-        return csSettings.customAbilitiesList;
-    }
-    static getHiddenAbilities() {
-        let csSettings = CustomSkills.settings;
-        return csSettings.hiddenAbilities;
-    }
-    static getHiddenSkills() {
-        let csSettings = CustomSkills.settings;
-        return csSettings.hiddenSkills;
-    }
+  /* get actors with hasPlayerOwner property **/
+  static getPlayerActors() {
+    return game.actors.filter(a => a.hasPlayerOwner === true);
+  }
+  
+  /** helper functions to get specific settings */
+  static getCustomSkillList() {
+    let csSettings = CustomSkills.settings;
+    return csSettings.customSkillList;
+  }
+  static getCustomAbilitiesList() {
+    let csSettings = CustomSkills.settings;
+    return csSettings.customAbilitiesList;
+  }
+  static getHiddenAbilities() {
+    let csSettings = CustomSkills.settings;
+    return csSettings.hiddenAbilities;
+  }
+  static getHiddenSkills() {
+    let csSettings = CustomSkills.settings;
+    return csSettings.hiddenSkills;
+  }
+  
+  static getI18nKey(string) {
+    let key = string.charAt(0).toUpperCase() + string.slice(1);
+    return 'Ability' + key + 'Abbr';
+  }
 
-    /* 
-      Temporary modify the dnd5e skill config.
-      Optional parameter: "remove code" to remove a single skill from dnd5e config.
-      All changes are in memory and temporary, and should be reapplied when needed.
-      No modification is made to dnd5e system.
-    */
-    static applyToSystem(removeCode) {
-      let systemSkills = game.dnd5e.config.skills;
-      let systemAbilities = game.dnd5e.config.abilities;
-      let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
+  /* 
+    Temporary modify the dnd5e skill config.
+    Optional parameter: "remove code" to remove a single skill from dnd5e config.
+    All changes are in memory and temporary, and should be reapplied when needed.
+    No modification is made to dnd5e system.
+  */
+  static applyToSystem(removeCode) {
+    let systemSkills = game.dnd5e.config.skills;
+    let systemAbilities = game.dnd5e.config.abilities;
+    let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
+    // need to modify the _fallback translation for compatibility with tidy5esheet
+    let i18nAbbr = game.i18n._fallback.DND5E;
+    console.log(i18nAbbr);
+    let abbrKey = '';
+    
+    if (typeof removeCode != 'undefined') {
+      abbrKey = this.getI18nKey(removeCode);
+      // removing leftover
+      if (typeof systemSkills[removeCode] != 'undefined')
+        systemSkills = CustomSkills.removeKey(systemSkills, removeCode);
+      if (typeof systemAbilities[removeCode] != 'undefined')
+        systemAbilities = CustomSkills.removeKey(systemAbilities, removeCode);
+      if (typeof systemAbilityAbbr[removeCode] != 'undefined')
+        systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, removeCode);
+      if (typeof i18nAbbr[abbrKey] != 'undefined')
+        i18nAbbr = CustomSkills.removeKey(i18nAbbr, abbrKey);
+    } else {
+      // add or remove the rest 
+      let customSkills = CustomSkills.getCustomSkillList();
+      for (let s in customSkills) {
+        if (customSkills[s].applied) {
+          let label = customSkills[s].label;
+          systemSkills[s] = label;
+        } else if (typeof systemSkills[s] != "undefined") {
+          systemSkills = CustomSkills.removeKey(systemSkills, s);
+        }
+      }
       
-      if (typeof removeCode != 'undefined') {
-        // removing leftover
-        if (typeof systemSkills[removeCode] != 'undefined')
-          systemSkills = CustomSkills.removeKey(systemSkills, removeCode);
-        if (typeof systemAbilities[removeCode] != 'undefined')
-          systemAbilities = CustomSkills.removeKey(systemAbilities, removeCode);
-        if (typeof systemAbilityAbbr[removeCode] != 'undefined')
-          systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, removeCode);
-      } else {
-        // add or remove the rest 
-        let customSkills = CustomSkills.getCustomSkillList();
-        for (let s in customSkills) {
-          if (customSkills[s].applied) {
-            let label = customSkills[s].label;
-            systemSkills[s] = label;
-          } else if (typeof systemSkills[s] != "undefined") {
-            systemSkills = CustomSkills.removeKey(systemSkills, s);
+      let customAbilities = CustomSkills.getCustomAbilitiesList();
+      for (let a in customAbilities) {
+        abbrKey = this.getI18nKey(a);
+        if (customAbilities[a].applied) {
+          let label = customAbilities[a].label;
+          systemAbilities[a] = label;
+          systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
+          i18nAbbr[abbrKey] = systemAbilityAbbr[a];
+        } else {
+          if (typeof systemAbilities[a] != "undefined") {
+            systemAbilities = CustomSkills.removeKey(systemAbilities, a);
           }
-        }
-        
-        let customAbilities = CustomSkills.getCustomAbilitiesList();
-        for (let a in customAbilities) {
-          if (customAbilities[a].applied) {
-            let label = customAbilities[a].label;
-            systemAbilities[a] = label;
-            systemAbilityAbbr[a] = a;
-          } else {
-            if (typeof systemAbilities[a] != "undefined") {
-              systemAbilities = CustomSkills.removeKey(systemAbilities, a);
-            }
-            if (typeof systemAbilityAbbr[a] != "undefined") {
-              systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, a);
-            }
+          if (typeof systemAbilityAbbr[a] != "undefined") {
+            systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, a);
           }
+          if (typeof i18nAbbr[abbrKey] != 'undefined')
+            i18nAbbr = CustomSkills.removeKey(i18nAbbr, abbrKey);
         }
       }
-      
-      // update system config
-      game.dnd5e.config.skills = systemSkills;
-      game.dnd5e.config.abilities = systemAbilities;
-      game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
     }
     
-    /* utility function to remove a key from object 
-     * params:
-     *  obj = the object to process
-     *  property = the propery to remove
-    */
-    static removeKey(obj, property) {
-        const {
-            [property]: unused, ...rest
-        } = obj
-
-        return rest
-    }
-
-    static addSkillToActors(skillCode) {
-        let skillList = this.getCustomSkillList();
-        let skillToAdd = skillList[skillCode];
-        let characters = this.getPlayerActors();
-        let charactersToAddSkill = characters.filter(s => s.data.data.skills.hasOwnProperty(skillCode) == false);
-        const keys = Object.keys(charactersToAddSkill);
+    // update system config
+    game.dnd5e.config.skills = systemSkills;
+    game.dnd5e.config.abilities = systemAbilities;
+    game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
+    game.i18n._fallback.DND5E = i18nAbbr;
+  }
+  
+  // remove every leftover from this module from actors charcaters
+  static cleanActors(){
+    const characters = this.getPlayerActors();
+    const skillList = this.getCustomSkillList();
+    const abilityList = this.getCustomAbilitiesList();
+    
+    const keys = Object.keys(characters);
+    
+    if (keys.length > 0) {
+      keys.forEach((key, index) => {
+        let Actor = characters[key];
+        let updatedDataSkills = Actor.data.data.skills;
+        let updatedDataAbilities = Actor.data.data.abilities;
+        let skillKeys = Object.keys(updatedDataSkills).filter(k => k.startsWith('cus_'));
+        let abilityKeys = Object.keys(updatedDataAbilities).filter(k => k.startsWith('cua_'));
         
-        if (keys.length > 0) {
-            keys.forEach((key, index) => {
-                let Actor = charactersToAddSkill[key];
-                console.log('Removing skill "' + skillToAdd.label + '" from:' + Actor.name);
-                let updatedData = {
-                    [`data.skills.${skillCode}`]: skillToAdd
-                };
-                Actor.update(updatedData);
-            })
+        // remove leftover skills
+        for (let s = 0; s < skillKeys.length; s++) {
+          let skillkey = skillKeys[s];
+          if (typeof skillList[skillkey] != 'undefined' && skillList[skillkey].applied) {
+            continue;
+          }
+          updatedDataSkills = CustomSkills.removeKey(updatedDataSkills, skillkey);
         }
-    }
-
-
-    static removeSkillFromActors(skillCode) {
-        let skillList = this.getCustomSkillList();
-        let skillToRemove = skillList[skillCode];
-        let characters = this.getPlayerActors();
-        let charactersToRemoveSkills = characters.filter(s => s.data.data.skills.hasOwnProperty(skillCode));
-        const keys = Object.keys(charactersToRemoveSkills);
         
-        if (keys.length > 0) {
-            keys.forEach((key, index) => {
-                let Actor = charactersToRemoveSkills[key];
-                console.log('Removing skill "' + skillToRemove.label + '" from:' + Actor.name);
-                Actor.update({
-                    ['data.skills.-=' + skillCode]: null
-                });
-            })
+        // remove leftover abilities
+        for (let a = 0; a < abilityKeys.length; a++) {
+          let abilityKey = abilityKeys[a];
+          if (typeof abilityList[abilityKey] != 'undefined' && abilityList[abilityKey].applied) {
+            continue;
+          }
+          updatedDataAbilities = CustomSkills.removeKey(updatedDataAbilities, abilityKey);
         }
-    }
-    
-    static addAbilityToActor(abilityCode){
-      const emptyAbility = game.system.template.Actor.templates.common.abilities.cha;
-      const newAbility = foundry.utils.deepClone(emptyAbility);
-      let characters = this.getPlayerActors();
-      let charactersToAddAbility = characters.filter(s => s.data.data.abilities.hasOwnProperty(abilityCode) == false);
-      const keys = Object.keys(charactersToAddAbility);
-      
-      if (keys.length > 0) {
-          keys.forEach((key, index) => {
-              let Actor = charactersToAddAbility[key];
-              let updatedData = {
-                  [`data.abilities.${abilityCode}`]: newAbility
-              };
-              Actor.update(updatedData);
-          })
-      }
-    }
-    
-    static removeAbilityFromActors(abilityCode) {
-        let abilitiesList = this.getCustomAbilitiesList();
-        let characters = this.getPlayerActors();
-        let charactersToRemoveAbility = characters.filter(s => s.data.data.abilities.hasOwnProperty(abilityCode));
-        const keys = Object.keys(charactersToRemoveAbility);
+        // update actor
+        let updatedData = {
+          [`data.skills`]: updatedDataSkills,
+          [`data.abilities`]: updatedDataAbilities,
+        };
         
-        if (keys.length > 0) {
-            keys.forEach((key, index) => {
-                let Actor = charactersToRemoveAbility[key];
-                console.log('ACTOR BEFORE',Actor);
-                Actor.update({
-                    ['data.abilities.-=' + abilityCode]: null
-                });
-                console.log('ACTOR AFTER', Actor);
-            })
-        }
+        Actor.update(updatedData);
+      })
     }
     
-    /** TODO remove all from actor
-    find all property starting with
-    example:  let found = CustomSkills.findValueByPrefix(Actor.data.data.skills, 'cus_');*/
-  static findValueByPrefix(object, prefix) {
-    for (var property in object) {
-      if (object.hasOwnProperty(property) && 
-         property.toString().startsWith(prefix)) {
-         //return object[property];
-         return property;
-      }
+    
+    
+  }
+  
+  /* utility function to remove a key from object 
+   * params:
+   *  obj = the object to process
+   *  property = the propery to remove
+  */
+  static removeKey(obj, property) {
+      const {
+          [property]: unused, ...rest
+      } = obj
+
+      return rest
+  }
+
+  /** add single skill to actor **/
+  static addSkillToActors(skillCode) {
+    let skillList = this.getCustomSkillList();
+    let skillToAdd = skillList[skillCode];
+    let characters = this.getPlayerActors();
+    let charactersToAddSkill = characters.filter(s => s.data.data.skills.hasOwnProperty(skillCode) == false);
+    const keys = Object.keys(charactersToAddSkill);
+    
+    if (keys.length > 0) {
+      keys.forEach((key, index) => {
+        let Actor = charactersToAddSkill[key];
+        let updatedData = {
+            [`data.skills.${skillCode}`]: skillToAdd
+        };
+        Actor.update(updatedData);
+      })
+    }
+  }
+  
+  /** add single ability to actor **/
+  static addAbilityToActor(abilityCode){
+    const emptyAbility = game.system.template.Actor.templates.common.abilities.cha;
+    let newAbility = foundry.utils.deepClone(emptyAbility);
+    const customAbilities = CustomSkills.getCustomAbilitiesList();
+    
+    if (customAbilities.hasOwnProperty(abilityCode)) {
+      newAbility.abbr = customAbilities[abilityCode].label.slice(0, 3).toLowerCase();
+    }
+    
+    let characters = this.getPlayerActors();
+    let charactersToAddAbility = characters.filter(s => s.data.data.abilities.hasOwnProperty(abilityCode) == false);
+    const keys = Object.keys(charactersToAddAbility);
+    
+    if (keys.length > 0) {
+      keys.forEach((key, index) => {
+        let Actor = charactersToAddAbility[key];
+        let updatedData = {
+            [`data.abilities.${abilityCode}`]: newAbility
+        };
+        Actor.update(updatedData);
+      })
     }
   }
 }
 
 function addLabels(app, html, data) {
-    console.log('DND5E', game.dnd5e);
-    console.log('data', data);
-
-    html.find(".skills-list").addClass("custom-skills");
-    html.find(".ability-scores").addClass("custom-abilities");
-
-    const skillList = CustomSkills.getCustomSkillList();
-    const hiddenSkills = CustomSkills.getHiddenSkills();
-    const hiddenAbilities = CustomSkills.getHiddenAbilities();
-    const skillRowSelector = ".skills-list .skill";
-
-    html.find(skillRowSelector).each(function() {
-        const skillElem = $(this);
-        const skillKey = $(this).attr("data-skill");
-        if (skillList.hasOwnProperty(skillKey)) {
-            //add label to existing skill
-            data.data.skills[skillKey].label = skillList[skillKey].label;
-            skillElem.find(".skill-name").text(skillList[skillKey].label);
-        }
-        
-    });
-    for (let hs in hiddenSkills) {
-      if (hiddenSkills[hs])
-        $('.skills-list .skill[data-skill="'+hs+'"]', html).addClass('disabled');
+  // new classes for ui and css purposes
+  html.find(".skills-list").addClass("custom-skills");
+  html.find(".ability-scores").addClass("custom-abilities");
+  
+  const skillList = CustomSkills.getCustomSkillList();
+  const hiddenSkills = CustomSkills.getHiddenSkills();
+  const hiddenAbilities = CustomSkills.getHiddenAbilities();
+  const skillRowSelector = ".skills-list .skill";
+  
+  html.find(skillRowSelector).each(function() {
+    const skillElem = $(this);
+    const skillKey = $(this).attr("data-skill");
+    if (skillList.hasOwnProperty(skillKey)) {
+      //add label to existing skill
+      data.data.skills[skillKey].label = skillList[skillKey].label;
+      skillElem.find(".skill-name").text(skillList[skillKey].label);
     }
-    
-    for (let ha in hiddenAbilities) {
-      console.log('SHEET HIDDEN ABILITIES', ha, hiddenAbilities[ha]);
-      if (hiddenAbilities[ha])
-        $('.ability-scores .ability[data-ability ="'+ha+'"]', html).addClass('disabled');
-    }
+  });
+  
+  /** hide skills **/
+  for (let hs in hiddenSkills) {
+    if (hiddenSkills[hs])
+      $('.skills-list .skill[data-skill="'+hs+'"]', html).addClass('disabled');
+  }
+  
+  /** hide abilities **/
+  for (let ha in hiddenAbilities) {
+    if (hiddenAbilities[ha])
+      $('.ability-scores .ability[data-ability ="'+ha+'"]', html).addClass('disabled');
+  }
 
-    return (app, html, data);
+  return (app, html, data);
 }
 
-function test(ActorSheet5eCharacter, html, data) {
-    //game.dnd5e.config.skills['cus_0'] = 'Ombra';
-}
-
-Hooks.on("renderChatMessage", addChatLabels);
-
-function addChatLabels(chatMessage, html) {
-    //data.flags.betterrolls5e.fields[0][1].title = "ciao";
-    //console.log('chatMessage', chatMessage);
-}
-
-
-//Hooks.on("renderActorSheet5eCharacter", test);
+/** perform some necessary operations on character sheet **/
 Hooks.on("renderActorSheet", addLabels);
-//Hooks.on("hoverToken ", CustomSkills.applyToSystem());
+
+Hooks.on("i18nInit", async () => {
+  CustomSkills.applyToSystem();
+});

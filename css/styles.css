@@ -30,6 +30,25 @@ div#cs-debug_box span {
     overflow: auto;
 }
 
+.tidy5e.sheet.actor .ability-scores.custom-abilities .ability .config-button {
+    bottom: auto;
+    top: 5px;
+    left: calc(50% + 1.5em);
+}
+
+.tidy5e.sheet.actor .ability-scores.custom-abilities .ability .ability-modifiers .ability-proficiency {
+    bottom: 310%;
+    left: 0;
+}
+
+.tidy5e.sheet.actor .ability-scores.custom-abilities {
+    flex-wrap: wrap;
+}
+
+.tidy5e.sheet.actor .ability-scores.custom-abilities .ability {
+    margin-bottom: 0.7em;
+}
+
 .dnd5e-custom-skills input[type="text"][readonly],
 .dnd5e-custom-skills select[readonly] {
     opacity: 0.7;
@@ -68,6 +87,21 @@ form .form-group.hide-abilities h3,
 form .form-group.hide-skills h3 {
   flex-basis:100%;
 }
+
+.form-group.ability_element .ability_name {
+    flex: 3.2;
+}
+.form-group.ability_element .ability_apply {}
+
+.form-group.skill_element .skill_name {
+    flex: 2.1;
+}
+
+.form-group.skill_element .skill_ability {
+    flex: 1;
+}
+
+.form-group.skill_element .skill_apply {}
 
 form .form-group.hide-abilities input, form .form-group.hide-skills input {
     width: auto;
