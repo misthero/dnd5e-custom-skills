@@ -147,7 +147,10 @@ class CustomSkillsForm extends FormApplication {
     
 } /** end CustomSkillsForm **/
 
-
+/*
+ * ░█░█▄░█░█░▀█▀░░░█▄█░▄▀▄░▄▀▄░█▄▀
+ * ░█░█▒▀█░█░▒█▒▒░▒█▒█░▀▄▀░▀▄▀░█▒█
+ */
 Hooks.on('init', () => {
     console.log('dnd5e-custom-skills init');
     //CONFIG.debug.hooks = true;
@@ -309,8 +312,11 @@ class CustomSkills {
     let systemAbilities = game.dnd5e.config.abilities;
     let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
     // need to modify the _fallback translation for compatibility with tidy5esheet
-    let i18nAbbr = game.i18n._fallback.DND5E;
-    console.log(i18nAbbr);
+    let i18nAbbr = {};
+    if (typeof game.i18n._fallback.DND5E != 'undefined')
+      i18nAbbr = game.i18n._fallback.DND5E;
+    else 
+      i18nAbbr = game.i18n.translations.DND5E;
     let abbrKey = '';
     
     if (typeof removeCode != 'undefined') {
@@ -507,6 +513,7 @@ function addLabels(app, html, data) {
 /** perform some necessary operations on character sheet **/
 Hooks.on("renderActorSheet", addLabels);
 
+/* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
   CustomSkills.applyToSystem();
 });
