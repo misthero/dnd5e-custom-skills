@@ -47,6 +47,13 @@ The module also allow to hide default abilities and skills if not needed for you
 
 ![immagine](https://user-images.githubusercontent.com/3662610/172493191-14db44de-ed53-424d-82a0-879c27be8f96.png)
 
+## FAQ
+* **My skills or abilities doesn't appear on character sheet, what should I do?**
+* * There are different reasons for this, first make sure the actor is "Owned" by a player. Than go to the module configuration and save the settings again. Also if the actor is new, you should save the settings again to include it.
+* **I changed a skill or ability name but on character sheet I see the old name, why?**
+* * To change a skill or ability name you have to follow exactly the following steps: disable it; save; rename; enable it again; and save again. In this order.
+
+
 ## Unistalling
 Before uninstalling this module is recommended to hit the reset button in order to clean every leftover data on current actors.
 If you forget to do it you can reactivate the module, reset it and uninstall again.
