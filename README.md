@@ -11,6 +11,7 @@ This module makes the necessary changes to player character actors data, no modi
 ### Character sheet compatibility
 - Default DND5e Character Sheet: **full**
 - Tidy 5e Sheet: **full**
+- OGL Character sheet: **partial**
 
 ### Module Usage
 
@@ -54,9 +55,14 @@ The module also allow to hide default abilities and skills if not needed for you
 * * To change a skill or ability name you have to follow exactly the following steps: disable it; save; rename; enable it again; and save again. In this order.
 
 
-## Unistalling
-Before uninstalling this module is recommended to hit the reset button in order to clean every leftover data on current actors.
-If you forget to do it you can reactivate the module, reset it and uninstall again.
+## Unistalling / Clean all skills and abilities
+Before uninstalling this module is recommended to follow the steps below:
+- Switch to default character sheet for every owned actor.
+- Open module configuration panel and hit reset button.
+- Now save clicking on "Apply changes to world"
+- Reload your world.
+
+If you forget to do it you can reactivate the module, follow the steps and uninstall again.
 
 
 
