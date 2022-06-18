@@ -71,7 +71,7 @@
         <!-- <div id="cs-debug_box"></div> -->
         <hr>
         <div class="form-group" style="margin: 10px;">
-            <button type="submit" name="submit"><i class="fas fa-head-side-cough"></i> {{localize "dnd5e-custom-skills.save"}}</button>
+            <button type="submit" name="submit" {{#if requireSave}} class="requireSave" {{/if}}><i class="fas fa-head-side-cough"></i> {{localize "dnd5e-custom-skills.save"}}</button>
             <button type="button" name="reset"><i class="fas fa-shield-virus"></i> {{localize "dnd5e-custom-skills.reset"}}</button>
         </div>
 

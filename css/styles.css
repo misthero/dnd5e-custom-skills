@@ -88,16 +88,16 @@ form .form-group.hide-skills h3 {
   flex-basis:100%;
 }
 
-.form-group.ability_element .ability_name {
+#skills-form .form-group.ability_element .ability_name {
     flex: 3.2;
 }
 .form-group.ability_element .ability_apply {}
 
-.form-group.skill_element .skill_name {
+#skills-form .form-group.skill_element .skill_name {
     flex: 2.1;
 }
 
-.form-group.skill_element .skill_ability {
+#skills-form .form-group.skill_element .skill_ability {
     flex: 1;
 }
 
@@ -116,4 +116,7 @@ form .form-group.hide-abilities input, form .form-group.hide-skills input {
 
 .form-group.hide-abilities, .form-group.hide-skills {
 
+}
+#skills-form button.requireSave{
+  background: orange;
 }

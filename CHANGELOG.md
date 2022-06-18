@@ -1,6 +1,7 @@
 # Changelog
 
-- v1.0.0: first public release.
-- v1.0.1: better compatibility with tidy5esheet
-- v1.0.2: fix i18n hook
-- v1.0.3: code fix
+- v1.0.0: First public release.
+- v1.0.1: Better compatibility with tidy5esheet
+- v1.0.2: Fix i18n hook
+- v1.0.3: Code refinement
+- v1.0.4: Refactoring cleanActors method to be better compliant with foundry and more stable; Better compatibility with OGL5e sheet.

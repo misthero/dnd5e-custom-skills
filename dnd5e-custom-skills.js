@@ -37,14 +37,18 @@ class CustomSkillsForm extends FormApplication {
   }
 
   getData(options) {
-      let data = mergeObject({ abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills }, this.reset ? CustomSkills.defaultSettings : CustomSkills.settings);
+      let data = mergeObject(
+        { abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills },
+        this.reset ? mergeObject(CustomSkills.defaultSettings, {requireSave:true}) : mergeObject(CustomSkills.settings, {requireSave:false}));
+      this.reset = false;
+      console.log('getData', data);
       return data;
   }
 
   onReset() {
       this.reset = true;
       game.settings.set(MODULE_NAME, 'settings', {});
-      CustomSkills.cleanActors();
+      ui.notifications.info(game.i18n.localize(MODULE_NAME + '.afterReset'));
       this.render();
   }
 
@@ -102,6 +106,7 @@ class CustomSkillsForm extends FormApplication {
       CustomSkills.applyToSystem();
       // clean leftovers on players actors
       CustomSkills.cleanActors();
+      
       this.render();
     })
   }
@@ -189,7 +194,9 @@ class CustomSkills {
     const oldSkillNum = Object.keys(csSettings.customSkillList).length;
     const oldAbilityNum = Object.keys(csSettings.customAbilitiesList).length;
     
+    
     if (csSettings.skillNum > oldSkillNum) {
+      // there are more skills than before
       let skills = {};
       for (let n = oldSkillNum; n < csSettings.skillNum; n++){
         let name = 'cus_' + n;
@@ -197,6 +204,7 @@ class CustomSkills {
       }
       csSettings.customSkillList = mergeObject(csSettings.customSkillList, skills);
     } else if (csSettings.skillNum < oldSkillNum) {
+      //there are less skills than before, need to delete some
       for (let n = (oldSkillNum - 1); n >= csSettings.skillNum; n--){
         let name = 'cus_' + n;
         delete csSettings.customSkillList[name];
@@ -204,6 +212,7 @@ class CustomSkills {
     }
     
     if (csSettings.abilitiesNum > oldAbilityNum) {
+      // there are more abilities than before
       let abilities = {};
       for (let n = oldAbilityNum; n < csSettings.abilitiesNum; n++){
         let name = 'cua_' + n;
@@ -211,6 +220,7 @@ class CustomSkills {
       }
       csSettings.customAbilitiesList = mergeObject(csSettings.customAbilitiesList, abilities);
     } else if (csSettings.abilitiesNum < oldAbilityNum) {
+      //there are less abilities than before, need to delete some
       for (let n = (oldAbilityNum - 1); n >= csSettings.abilitiesNum; n--){
         let name = 'cua_' + n;
         delete csSettings.customAbilitiesList[name];
@@ -295,7 +305,7 @@ class CustomSkills {
     let csSettings = CustomSkills.settings;
     return csSettings.hiddenSkills;
   }
-  
+  //create abbreviation key for i18n (tidy5e sheet pull from there when showing abilities)
   static getI18nKey(string) {
     let key = string.charAt(0).toUpperCase() + string.slice(1);
     return 'Ability' + key + 'Abbr';
@@ -367,7 +377,10 @@ class CustomSkills {
     game.dnd5e.config.skills = systemSkills;
     game.dnd5e.config.abilities = systemAbilities;
     game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
-    game.i18n._fallback.DND5E = i18nAbbr;
+    if (typeof game.i18n._fallback != 'undefined' && game.i18n._fallback.DND5E != 'undefined')
+      game.i18n._fallback.DND5E = i18nAbbr;
+    if (typeof game.i18n.translations != 'undefined' && game.i18n.translations.DND5E != 'undefined')
+      game.i18n.translations.DND5E = i18nAbbr;
   }
   
   // remove every leftover from this module from actors charcaters
@@ -378,43 +391,56 @@ class CustomSkills {
     
     const keys = Object.keys(characters);
     
-    if (keys.length > 0) {
+    const total = keys.length;
+    let count = 0;
+    
+    if (total > 0) {
       keys.forEach((key, index) => {
+        count++;
         let Actor = characters[key];
-        let updatedDataSkills = Actor.data.data.skills;
-        let updatedDataAbilities = Actor.data.data.abilities;
-        let skillKeys = Object.keys(updatedDataSkills).filter(k => k.startsWith('cus_'));
-        let abilityKeys = Object.keys(updatedDataAbilities).filter(k => k.startsWith('cua_'));
+        let updatedDataSkills = {};
+        let updatedDataAbilities = {};
+        let actorSkills = Actor.data.data.skills;
+        let actorAbilities = Actor.data.data.abilities;
+        // we need to find what actual actor skills and abilities comes from this module.
+        let skillKeys = Object.keys(actorSkills).filter(k => k.startsWith('cus_'));
+        let abilityKeys = Object.keys(actorAbilities).filter(k => k.startsWith('cua_'));
+        // here we store a list of keys representig properties we don't need anymore on actors.
+        let skillsToRemove = [];
+        let abilitiesToRemove = [];
         
-        // remove leftover skills
+        // prepare data to remove leftover skills
         for (let s = 0; s < skillKeys.length; s++) {
           let skillkey = skillKeys[s];
-          if (typeof skillList[skillkey] != 'undefined' && skillList[skillkey].applied) {
-            continue;
+          if (typeof skillList[skillkey] == 'undefined' || skillList[skillkey].applied == false) {
+            skillsToRemove.push(skillkey);
           }
-          updatedDataSkills = CustomSkills.removeKey(updatedDataSkills, skillkey);
         }
         
-        // remove leftover abilities
+        //  prepare data to remove leftover abilities
         for (let a = 0; a < abilityKeys.length; a++) {
           let abilityKey = abilityKeys[a];
-          if (typeof abilityList[abilityKey] != 'undefined' && abilityList[abilityKey].applied) {
-            continue;
+          if (typeof abilityList[abilityKey] == 'undefined' || abilityList[abilityKey].applied == false) {
+            abilitiesToRemove.push(abilityKey);
           }
-          updatedDataAbilities = CustomSkills.removeKey(updatedDataAbilities, abilityKey);
         }
-        // update actor
-        let updatedData = {
-          [`data.skills`]: updatedDataSkills,
-          [`data.abilities`]: updatedDataAbilities,
-        };
         
+        //we use foundry "-=" syntax to erase old properties
+        skillsToRemove.forEach(key => updatedDataSkills[`data.skills.-=${key}`] = null);
+        abilitiesToRemove.forEach(key => updatedDataAbilities[`data.abilities.-=${key}`] = null);
+
+        // prepare the update actor data
+        let updatedData = {
+          ...updatedDataSkills,
+          ...updatedDataAbilities
+        };
+        // finally update this actor
         Actor.update(updatedData);
+        let message = "Cleaning actors";
+        let percent = Math.round((count / total) * 100);
+        SceneNavigation.displayProgressBar({label: message, pct: percent });
       })
     }
-    
-    
-    
   }
   
   /* utility function to remove a key from object 
@@ -438,13 +464,20 @@ class CustomSkills {
     let charactersToAddSkill = characters.filter(s => s.data.data.skills.hasOwnProperty(skillCode) == false);
     const keys = Object.keys(charactersToAddSkill);
     
+    const total = keys.length;
+    let count = 0;
+    
     if (keys.length > 0) {
       keys.forEach((key, index) => {
+        count++;
         let Actor = charactersToAddSkill[key];
         let updatedData = {
             [`data.skills.${skillCode}`]: skillToAdd
         };
         Actor.update(updatedData);
+        let message = "Adding skills to actors";
+        let percent = Math.round((count / total) * 100);
+        SceneNavigation.displayProgressBar({label: message, pct: percent });
       })
     }
   }
@@ -463,13 +496,20 @@ class CustomSkills {
     let charactersToAddAbility = characters.filter(s => s.data.data.abilities.hasOwnProperty(abilityCode) == false);
     const keys = Object.keys(charactersToAddAbility);
     
+    const total = keys.length;
+    let count = 0;
+    
     if (keys.length > 0) {
       keys.forEach((key, index) => {
+        count++;
         let Actor = charactersToAddAbility[key];
         let updatedData = {
             [`data.abilities.${abilityCode}`]: newAbility
         };
         Actor.update(updatedData);
+        let message = "Adding abilities to actors";
+        let percent = Math.round((count / total) * 100);
+        SceneNavigation.displayProgressBar({label: message, pct: percent });
       })
     }
   }
@@ -488,8 +528,9 @@ function addLabels(app, html, data) {
   html.find(skillRowSelector).each(function() {
     const skillElem = $(this);
     const skillKey = $(this).attr("data-skill");
+    // if this skill is created by this module..
     if (skillList.hasOwnProperty(skillKey)) {
-      //add label to existing skill
+      //add labels to existing skill
       data.data.skills[skillKey].label = skillList[skillKey].label;
       skillElem.find(".skill-name").text(skillList[skillKey].label);
     }
@@ -516,4 +557,5 @@ Hooks.on("renderActorSheet", addLabels);
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
   CustomSkills.applyToSystem();
+  console.log(ui);
 });

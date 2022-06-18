@@ -5,7 +5,6 @@
     "dnd5e-custom-skills.form-title": "Custom Abilities & Skills Configuration",
     "dnd5e-custom-skills.skillInput": "Skill Name",
     "dnd5e-custom-skills.skillAbility": "Default Ability",
-    "dnd5e-custom-skills.skillApply": "Add Skill to every existing PC actor",
     "dnd5e-custom-skills.skillDelete": "Remove Skill from every PC actor",
     "dnd5e-custom-skills.skillNumLabel": "Number of custom Skills",
     "dnd5e-custom-skills.skillApply": "Activate",
@@ -15,5 +14,7 @@
     "dnd5e-custom-skills.hideSkills": "Hide Skills",
     "dnd5e-custom-skills.hideAbilities": "Hide Abilities",
     "dnd5e-custom-skills.save": "Apply changes to world",
-    "dnd5e-custom-skills.reset": "Reset"
+    "dnd5e-custom-skills.reset": "Reset",
+    "dnd5e-custom-skills.afterReset": "Please click 'Apply changes to world' after reset."
+
 }
