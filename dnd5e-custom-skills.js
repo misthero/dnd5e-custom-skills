@@ -41,7 +41,7 @@ class CustomSkillsForm extends FormApplication {
         { abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills },
         this.reset ? mergeObject(CustomSkills.defaultSettings, {requireSave:true}) : mergeObject(CustomSkills.settings, {requireSave:false}));
       this.reset = false;
-      console.log('getData', data);
+      //console.log('getData', data);
       return data;
   }
 
@@ -284,8 +284,14 @@ class CustomSkills {
   }
 
   /* get actors with hasPlayerOwner property **/
-  static getPlayerActors() {
-    return game.actors.filter(a => a.hasPlayerOwner === true);
+  static getPlayerActors(excludeVehicles) {
+    let filtered = {};
+    if (typeof excludeVehicles !== 'undefined' && excludeVehicles == true) {
+      filtered = game.actors.filter(a => (a.hasPlayerOwner === true && a.type === 'character') === true);
+    } else {
+      filtered = game.actors.filter(a => a.hasPlayerOwner === true);
+    }
+    return filtered;
   }
   
   /** helper functions to get specific settings */
@@ -398,13 +404,14 @@ class CustomSkills {
       keys.forEach((key, index) => {
         count++;
         let Actor = characters[key];
-        let updatedDataSkills = {};
-        let updatedDataAbilities = {};
+        let updatedDataSkills = {}, updatedDataAbilities = {}, skillKeys = {}, abilityKeys = {};
         let actorSkills = Actor.data.data.skills;
         let actorAbilities = Actor.data.data.abilities;
         // we need to find what actual actor skills and abilities comes from this module.
-        let skillKeys = Object.keys(actorSkills).filter(k => k.startsWith('cus_'));
-        let abilityKeys = Object.keys(actorAbilities).filter(k => k.startsWith('cua_'));
+        if (typeof actorSkills !== 'undefined') // could be undefined in case of vehicles
+          skillKeys = Object.keys(actorSkills).filter(k => k.startsWith('cus_'));
+        if (typeof actorAbilities !== 'undefined')
+          abilityKeys = Object.keys(actorAbilities).filter(k => k.startsWith('cua_'));
         // here we store a list of keys representig properties we don't need anymore on actors.
         let skillsToRemove = [];
         let abilitiesToRemove = [];
@@ -460,7 +467,7 @@ class CustomSkills {
   static addSkillToActors(skillCode) {
     let skillList = this.getCustomSkillList();
     let skillToAdd = skillList[skillCode];
-    let characters = this.getPlayerActors();
+    let characters = this.getPlayerActors(true);
     let charactersToAddSkill = characters.filter(s => s.data.data.skills.hasOwnProperty(skillCode) == false);
     const keys = Object.keys(charactersToAddSkill);
     
