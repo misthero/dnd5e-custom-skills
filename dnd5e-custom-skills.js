@@ -329,10 +329,10 @@ class CustomSkills {
     let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
     // need to modify the _fallback translation for compatibility with tidy5esheet
     let i18nAbbr = {};
-    if (typeof game.i18n._fallback.DND5E != 'undefined')
-      i18nAbbr = game.i18n._fallback.DND5E;
-    else 
+    if (typeof game.i18n.translations.DND5E != 'undefined')
       i18nAbbr = game.i18n.translations.DND5E;
+    else 
+      i18nAbbr = game.i18n._fallback.DND5E;
     let abbrKey = '';
     
     if (typeof removeCode != 'undefined') {

@@ -1,8 +1,8 @@
 {
     "name": "dnd5e-custom-skills",
-    "title": "Custom Abilities & Skills",
+    "title": "5e - Custom Abilities & Skills",
     "description": "FoundryVTT module for adding new character skills and abilities",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "minimumCoreVersion": "0.7.6",
     "compatibleCoreVersion": "9.269",
     "url": "https://github.com/misthero/dnd5e-custom-skills",

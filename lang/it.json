@@ -1,0 +1,20 @@
+{
+    "dnd5e-custom-skills.poptitle": "Configurazione Caratteristiche & Abilità",
+    "dnd5e-custom-skills.form": "Clicca il pulsante per aprire la configurazione",
+    "dnd5e-custom-skills.form-hint": "Utilizzabile per aggiungere nuove caratteristiche e abilità o nascondere quelle predefinite",
+    "dnd5e-custom-skills.form-title": "Configurazione Caratteristiche & Abilità",
+    "dnd5e-custom-skills.skillInput": "Nome Abilità",
+    "dnd5e-custom-skills.skillAbility": "Caratteristica",
+    "dnd5e-custom-skills.skillDelete": "Remove Skill from every PC actor",
+    "dnd5e-custom-skills.skillNumLabel": "Numero di Abilità personalizzate",
+    "dnd5e-custom-skills.skillApply": "Attiva",
+    "dnd5e-custom-skills.abilityApply": "Attiva",
+    "dnd5e-custom-skills.abilitiesNumLabel": "Numero di Caratteristiche personalizzate",
+    "dnd5e-custom-skills.abilityInput": "Nome Caratteristica",
+    "dnd5e-custom-skills.hideSkills": "Nascondi Abilità",
+    "dnd5e-custom-skills.hideAbilities": "Nascondi Caratteristiche",
+    "dnd5e-custom-skills.save": "Applica modifiche al Mondo",
+    "dnd5e-custom-skills.reset": "Reset",
+    "dnd5e-custom-skills.afterReset": "Dopo il 'Reset' clicca di nuovo su 'Applica modifiche al mondo'."
+
+}

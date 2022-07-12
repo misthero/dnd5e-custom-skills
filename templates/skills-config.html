@@ -11,7 +11,7 @@
             {{#each customAbilitiesList as |abilitydata a|}}
             <div class="form-group ability_element {{a}}">
                 <div class="ability_name">
-                    <div class="label">{{localize "dnd5e-custom-skills.abilityInput"}}</div>
+                    <div class="label">{{localize "dnd5e-custom-skills.abilityInput"}} ({{a}})</div>
                     <input {{#if abilitydata.applied}}readonly{{/if}} type="text" name="customAbilitiesList.{{a}}.label" data-dtype="string" value="{{ abilitydata.label }}" />
                 </div>
                 <div class="ability_apply" data-ability="{{a}}" data-tooltip="{{localize " dnd5e-custom-skills.abilityApply "}}">
@@ -31,7 +31,7 @@
             {{#each customSkillList as |skilldata n|}}
             <div class="form-group skill_element {{n}}">
                 <div class="skill_name">
-                    <div class="label">{{localize "dnd5e-custom-skills.skillInput"}}</div>
+                    <div class="label">{{localize "dnd5e-custom-skills.skillInput"}} ({{n}})</div>
                     <input {{#if skilldata.applied}}readonly{{/if}} type="text" name="customSkillList.{{n}}.label" data-dtype="string" value="{{ skilldata.label }}" />
                 </div>
                 <div class="skill_ability">
