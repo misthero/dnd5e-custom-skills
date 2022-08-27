@@ -30,6 +30,15 @@ div#cs-debug_box span {
     overflow: auto;
 }
 
+.dnd5e.sheet.actor .custom-abilities .ability {
+    min-width: 100%;
+}
+
+.dnd5e.sheet.actor .custom-abilities .ability > h4 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .tidy5e.sheet.actor .ability-scores.custom-abilities .ability .config-button {
     bottom: auto;
     top: 5px;

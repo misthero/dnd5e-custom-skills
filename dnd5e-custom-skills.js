@@ -91,15 +91,32 @@ class CustomSkillsForm extends FormApplication {
       // update settings
       yield game.settings.set(MODULE_NAME, 'settings', newSettings);
       
+      
+      const keys_sk = Object.keys(newSkills);
+      const keys_ab = Object.keys(newAbilities);
+    
+      const total = keys_sk.length + keys_ab.length;
+
+      let message = game.i18n.localize(MODULE_NAME + '.processingSkills');;
+      let percent = 0;
+      let count = 0;
+      
       // finally add skills and abilities to actors
       for (let s in newSkills) {
         if(newSkills[s].applied)
-          CustomSkills.addSkillToActors(s)
+          CustomSkills.addSkillToActors(s);
+        count++;
+        percent = Math.round((count / total) * 100);
+        SceneNavigation.displayProgressBar({label: message, pct: percent });
       }
       
+      message = game.i18n.localize(MODULE_NAME + '.processingAbilities');
       for (let a in newAbilities) {
         if(newAbilities[a].applied == true)
           CustomSkills.addAbilityToActor(a);
+        count++;
+        percent = Math.round((count / total) * 100);
+        SceneNavigation.displayProgressBar({label: message, pct: percent });
       }
       
       // modify system variables
@@ -108,6 +125,7 @@ class CustomSkillsForm extends FormApplication {
       CustomSkills.cleanActors();
       
       this.render();
+      ui.notifications.info(game.i18n.localize(MODULE_NAME + '.updateDone'));
     })
   }
     
@@ -173,13 +191,19 @@ Hooks.on('init', () => {
     game.settings.register(MODULE_NAME, "settings", {
       name: "Custom Skills Settings",
       scope: "world",
-      default: CustomSkillsForm.defaultSettings,
+      default: CustomSkills.defaultSettings,
       type: Object,
       config: false,
       //onChange: (x) => window.location.reload()
     });
     
-    
+    window._isDaeActive = false;
+    for (const mod of game.data.modules) {
+      if (mod.id == "dae" && mod.active) {
+        window._isDaeActive = true;
+        break;
+      }
+    }
 });
 
 /* 
@@ -251,6 +275,7 @@ class CustomSkills {
       abilities[name] = {label: "", applied: false};
     };
     
+    
     return {
       customSkillList: skills,
       skillNum : skillNum,
@@ -263,13 +288,15 @@ class CustomSkills {
   
   static getBaseSkill() {
     return {
+      value: 0,
       ability: "str",
-      bonus: 0,
+      bonuses: {
+        check: '',
+        passive: '',
+      },
       mod: 0,
       passive: 0,
-      prof: 0,
       total: 0,
-      value: 0,
       label: "",
       applied: 0
     };
@@ -287,9 +314,11 @@ class CustomSkills {
   static getPlayerActors(excludeVehicles) {
     let filtered = {};
     if (typeof excludeVehicles !== 'undefined' && excludeVehicles == true) {
-      filtered = game.actors.filter(a => (a.hasPlayerOwner === true && a.type === 'character') === true);
+      //filtered = game.actors.filter(a => (a.hasPlayerOwner === true && a.type === 'character') === true);
+      return game.actors.filter(a => (a.type === 'character' || a.type === 'npc') === true);
     } else {
-      filtered = game.actors.filter(a => a.hasPlayerOwner === true);
+      //filtered = game.actors.filter(a => a.hasPlayerOwner === true);
+      return game.actors.filter(a => (a.collectionName === 'actors') === true);
     }
     return filtered;
   }
@@ -327,12 +356,12 @@ class CustomSkills {
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
     let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
-    // need to modify the _fallback translation for compatibility with tidy5esheet
-    let i18nAbbr = {};
-    if (typeof game.i18n.translations.DND5E != 'undefined')
-      i18nAbbr = game.i18n.translations.DND5E;
-    else 
-      i18nAbbr = game.i18n._fallback.DND5E;
+
+    // see if we need to modify the _fallback translation for compatibility with tidy5esheet
+    let isFallback = false;
+    if (typeof game.i18n.translations.DND5E != 'undefined') {
+      isFallback = true;
+    }
     let abbrKey = '';
     
     if (typeof removeCode != 'undefined') {
@@ -344,8 +373,13 @@ class CustomSkills {
         systemAbilities = CustomSkills.removeKey(systemAbilities, removeCode);
       if (typeof systemAbilityAbbr[removeCode] != 'undefined')
         systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, removeCode);
-      if (typeof i18nAbbr[abbrKey] != 'undefined')
-        i18nAbbr = CustomSkills.removeKey(i18nAbbr, abbrKey);
+      if (isFallback) {
+        if (typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
+          game.i18n._fallback.DND5E = CustomSkills.removeKey(game.i18n._fallback.DND5E, abbrKey);
+      } else {
+        if (typeof game.i18n.translations.DND5E[abbrKey] != 'undefined')
+          game.i18n.translations.DND5E = CustomSkills.removeKey(game.i18n.translations.DND5E, abbrKey);
+      }
     } else {
       // add or remove the rest 
       let customSkills = CustomSkills.getCustomSkillList();
@@ -353,6 +387,9 @@ class CustomSkills {
         if (customSkills[s].applied) {
           let label = customSkills[s].label;
           systemSkills[s] = label;
+          if (window._isDaeActive) {
+            this.daeAutoFields(s, true)
+          }
         } else if (typeof systemSkills[s] != "undefined") {
           systemSkills = CustomSkills.removeKey(systemSkills, s);
         }
@@ -365,16 +402,30 @@ class CustomSkills {
           let label = customAbilities[a].label;
           systemAbilities[a] = label;
           systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
-          i18nAbbr[abbrKey] = systemAbilityAbbr[a];
+          if (isFallback)
+            game.i18n._fallback.DND5E[abbrKey] = systemAbilityAbbr[a];
+          else
+            game.i18n.translations.DND5E[abbrKey] = systemAbilityAbbr[a];
+          if (window._isDaeActive) {
+            this.daeAutoFields(a); 
+          }
         } else {
+          // not applied, we should remove it.
           if (typeof systemAbilities[a] != "undefined") {
             systemAbilities = CustomSkills.removeKey(systemAbilities, a);
           }
           if (typeof systemAbilityAbbr[a] != "undefined") {
             systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, a);
           }
-          if (typeof i18nAbbr[abbrKey] != 'undefined')
-            i18nAbbr = CustomSkills.removeKey(i18nAbbr, abbrKey);
+
+          if (isFallback) {
+            if (typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
+              game.i18n._fallback.DND5E = CustomSkills.removeKey(game.i18n._fallback.DND5E, abbrKey);
+          } else {
+            if (typeof game.i18n.translations.DND5E[abbrKey] != 'undefined')
+              game.i18n.translations.DND5E = CustomSkills.removeKey(game.i18n.translations.DND5E, abbrKey);
+          }
+          
         }
       }
     }
@@ -383,10 +434,6 @@ class CustomSkills {
     game.dnd5e.config.skills = systemSkills;
     game.dnd5e.config.abilities = systemAbilities;
     game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
-    if (typeof game.i18n._fallback != 'undefined' && game.i18n._fallback.DND5E != 'undefined')
-      game.i18n._fallback.DND5E = i18nAbbr;
-    if (typeof game.i18n.translations != 'undefined' && game.i18n.translations.DND5E != 'undefined')
-      game.i18n.translations.DND5E = i18nAbbr;
   }
   
   // remove every leftover from this module from actors charcaters
@@ -398,13 +445,12 @@ class CustomSkills {
     const keys = Object.keys(characters);
     
     const total = keys.length;
-    let count = 0;
     
     if (total > 0) {
       keys.forEach((key, index) => {
-        count++;
         let Actor = characters[key];
         let updatedDataSkills = {}, updatedDataAbilities = {}, skillKeys = {}, abilityKeys = {};
+        //console.log('cleaning ACTOR:', Actor);
         let actorSkills = Actor.data.data.skills;
         let actorAbilities = Actor.data.data.abilities;
         // we need to find what actual actor skills and abilities comes from this module.
@@ -443,9 +489,6 @@ class CustomSkills {
         };
         // finally update this actor
         Actor.update(updatedData);
-        let message = "Cleaning actors";
-        let percent = Math.round((count / total) * 100);
-        SceneNavigation.displayProgressBar({label: message, pct: percent });
       })
     }
   }
@@ -472,19 +515,14 @@ class CustomSkills {
     const keys = Object.keys(charactersToAddSkill);
     
     const total = keys.length;
-    let count = 0;
     
-    if (keys.length > 0) {
+    if (total > 0) {
       keys.forEach((key, index) => {
-        count++;
         let Actor = charactersToAddSkill[key];
         let updatedData = {
             [`data.skills.${skillCode}`]: skillToAdd
         };
         Actor.update(updatedData);
-        let message = "Adding skills to actors";
-        let percent = Math.round((count / total) * 100);
-        SceneNavigation.displayProgressBar({label: message, pct: percent });
       })
     }
   }
@@ -504,26 +542,39 @@ class CustomSkills {
     const keys = Object.keys(charactersToAddAbility);
     
     const total = keys.length;
-    let count = 0;
     
-    if (keys.length > 0) {
+    if (total > 0) {
       keys.forEach((key, index) => {
-        count++;
         let Actor = charactersToAddAbility[key];
         let updatedData = {
             [`data.abilities.${abilityCode}`]: newAbility
         };
         Actor.update(updatedData);
-        let message = "Adding abilities to actors";
-        let percent = Math.round((count / total) * 100);
-        SceneNavigation.displayProgressBar({label: message, pct: percent });
       })
+    }
+  }
+  
+  static daeAutoFields(code, isSkill) {
+    if (typeof isSkill != 'undefined' && isSkill == true) {
+      DAE.addAutoFields([
+        "data.skills." + code + ".value",
+        "data.skills." + code + ".ability",
+        "data.skills." + code + ".bonuses.check",
+        "data.skills." + code + ".bonuses.passive"
+      ]);
+    } else {
+      DAE.addAutoFields([
+        "data.abilities." + code + ".value",
+        "data.abilities." + code + ".proficient",
+        "data.abilities." + code + ".bonuses.check",
+        "data.abilities." + code + ".bonuses.save",
+        "data.abilities." + code + ".min"
+      ]);
     }
   }
 }
 
 function addLabels(app, html, data) {
-  // new classes for ui and css purposes
   html.find(".skills-list").addClass("custom-skills");
   html.find(".ability-scores").addClass("custom-abilities");
   
@@ -563,6 +614,13 @@ Hooks.on("renderActorSheet", addLabels);
 
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
+  console.log('dnd-5e-custom-skills.applyToSystem');
+  if (!window._isDaeActive) {
+    CustomSkills.applyToSystem();
+  }
+});
+
+Hooks.on("DAE.setupComplete", async () => {
+  console.log('dnd-5e-custom-skills.DAE.STARTED');
   CustomSkills.applyToSystem();
-  console.log(ui);
 });
