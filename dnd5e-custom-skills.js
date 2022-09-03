@@ -359,7 +359,7 @@ class CustomSkills {
 
     // see if we need to modify the _fallback translation for compatibility with tidy5esheet
     let isFallback = false;
-    if (typeof game.i18n.translations.DND5E != 'undefined') {
+    if (typeof game.i18n.translations.DND5E == 'undefined') {
       isFallback = true;
     }
     let abbrKey = '';
