@@ -9,3 +9,4 @@
 - v1.0.6: Fixed bug tidy5e translation. Added IT translation. Configuration now show each ability and skill interlan `data.[key]` (for use with macros or formulas).
 - v1.0.7: Dae Compatibility + removed owned actor limitation
 - v1.0.8: Fixed regression with tidy 5e sheet.
+  v1.1.0: First FVTT v10 release.

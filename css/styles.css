@@ -36,8 +36,7 @@ div#cs-debug_box span {
 
 .dnd5e.sheet.actor.cb5es .custom-abilities .ability {
   min-width:auto;
-}
-
+}                                                    
 .dnd5e.sheet.actor .custom-abilities .ability > h4 {
     overflow: hidden;
     text-overflow: ellipsis;
