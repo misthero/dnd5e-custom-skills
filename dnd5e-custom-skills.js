@@ -86,8 +86,6 @@ class CustomSkillsForm extends FormApplication {
       newAbilities = mergeObject(oldSettings.customAbilitiesList, Form.customAbilitiesList, { insertKeys: true, insertValues: true, overwrite:true });
     };
     
-    
-    
     await this.update(newSkills, newAbilities);
     
     return this.render();
@@ -192,13 +190,19 @@ Hooks.on('init', () => {
     game.settings.register(MODULE_NAME, "settings", {
       name: "Custom Skills Settings",
       scope: "world",
-      default: CustomSkillsForm.defaultSettings,
+      default: CustomSkills.defaultSettings,
       type: Object,
       config: false,
       //onChange: (x) => window.location.reload()
     });
     
-    
+    window._isDaeActive = false;
+    for (const mod of game.data.modules) {
+      if (mod.id == "dae" && mod.active) {
+        window._isDaeActive = true;
+        break;
+      }
+    }
 });
 
 /* 
@@ -282,13 +286,15 @@ class CustomSkills {
   
   static getBaseSkill() {
     return {
+      value: 0,
       ability: "str",
-      bonus: 0,
+      bonuses: {
+        check: '',
+        passive: '',
+      },
       mod: 0,
       passive: 0,
-      prof: 0,
       total: 0,
-      value: 0,
       label: "",
       applied: 0
     };
@@ -348,14 +354,7 @@ class CustomSkills {
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
     let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
-    //console.log('game', game);
-    //console.log('systemSkills', systemSkills);
-    //console.log('systemAbilities', systemAbilities);
-    //console.log('systemAbilityAbbr', systemAbilityAbbr);
-    //console.log('systemAbilityAbbr', systemAbilityAbbr);
-    //console.log('game.i18n.translations.DND5E', game.i18n.translations.DND5E);
-    //console.log('game.i18n._fallback.DND5E', game.i18n._fallback.DND5E);
-    //console.log(game.i18n);
+
     // see if we need to modify the _fallback translation for compatibility with tidy5esheet
     let isFallback = false;
     if (typeof game.i18n.translations.DND5E === 'undefined') {
@@ -387,6 +386,9 @@ class CustomSkills {
         if (customSkills[s].applied) {
           let label = customSkills[s].label;
           systemSkills[s] = label;
+          if (window._isDaeActive) {
+            this.daeAutoFields(s, true)
+          }
         } else if (typeof systemSkills[s] != "undefined") {
           systemSkills = CustomSkills.removeKey(systemSkills, s);
         }
@@ -402,8 +404,11 @@ class CustomSkills {
           systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
           if (isFallback) {
             game.i18n._fallback.DND5E[abbrKey] = systemAbilityAbbr[a];
-          } else{
+          } else {
             game.i18n.translations.DND5E[abbrKey] = systemAbilityAbbr[a];
+          }
+          if (window._isDaeActive) {
+            this.daeAutoFields(a); 
           }
         } else {
           // not appled, we should remove it.
@@ -551,6 +556,27 @@ class CustomSkills {
       })
     }
   }
+  
+  // dae autocomplete compatibility
+  static daeAutoFields(code, isSkill) {
+    if (typeof isSkill != 'undefined' && isSkill == true) {
+      DAE.addAutoFields([
+        "system.skills." + code + ".value",
+        "system.skills." + code + ".ability",
+        "system.skills." + code + ".bonuses.check",
+        "system.skills." + code + ".bonuses.passive"
+      ]);
+    } else {
+      DAE.addAutoFields([
+        "system.abilities." + code + ".value",
+        "system.abilities." + code + ".proficient",
+        "system.abilities." + code + ".bonuses.check",
+        "system.abilities." + code + ".bonuses.save",
+        "system.abilities." + code + ".min"
+      ]);
+    }
+  }
+  
 }
 
 function addLabels(app, html, data) {
@@ -597,5 +623,13 @@ Hooks.on("renderActorSheet", addLabels);
 
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
+  if (!window._isDaeActive) {
+    console.log('dnd-5e-custom-skills.applyToSystem');
+    CustomSkills.applyToSystem();
+  }
+});
+
+Hooks.on("DAE.setupComplete", async () => {
+  console.log('dnd-5e-custom-skills.DAE.STARTED');
   CustomSkills.applyToSystem();
 });
