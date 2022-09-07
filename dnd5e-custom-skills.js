@@ -1,15 +1,5 @@
 const MODULE_NAME = 'dnd5e-custom-skills';
 
-var __awaiter = (this && this.__awaiter) || function(thisArg, _arguments, P, generator) {
-  function adopt(value) { return value instanceof P ? value : new P(function(resolve) { resolve(value); }); }
-  return new(P || (P = Promise))(function(resolve, reject) {
-    function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-    function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-    function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
-  });
-};
-
 Handlebars.registerHelper("csFormat", (path, ...args) => {
     return game.i18n.format(path, args[0].hash);
 });
@@ -41,7 +31,7 @@ class CustomSkillsForm extends FormApplication {
         { abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills },
         this.reset ? mergeObject(CustomSkills.defaultSettings, {requireSave:true}) : mergeObject(CustomSkills.settings, {requireSave:false}));
       this.reset = false;
-      //console.log('getData', data);
+      // console.log('getData', data);
       return data;
   }
 
@@ -59,6 +49,7 @@ class CustomSkillsForm extends FormApplication {
     let newSkills;
     let newAbilities;
     let newSettings = mergeObject(oldSettings, Form);
+
     // update settings
     await game.settings.set(MODULE_NAME, 'settings', newSettings);
     
@@ -85,7 +76,7 @@ class CustomSkillsForm extends FormApplication {
     } else {
       newAbilities = mergeObject(oldSettings.customAbilitiesList, Form.customAbilitiesList, { insertKeys: true, insertValues: true, overwrite:true });
     };
-    
+
     await this.update(newSkills, newAbilities);
     
     return this.render();
@@ -120,7 +111,8 @@ class CustomSkillsForm extends FormApplication {
     }
     
     // modify system variables
-    await CustomSkills.applyToSystem();
+    CustomSkills.applyToSystem();
+    
     // clean leftovers on players actors
     await CustomSkills.cleanActors();
     ui.notifications.info(game.i18n.localize(MODULE_NAME + '.updateDone'));
@@ -142,24 +134,36 @@ class CustomSkillsForm extends FormApplication {
       const skillCode = elem.data('skill');
       if (elem.prop('checked')) {
         $('select#select_'+skillCode, container).attr('disabled', 'disabled');
-        $('input[name="customSkillList.' + skillCode + '.label"]', container).attr('readonly', 'readonly');
+        $('input[name="fakeSkillList.' + skillCode + '.label"]', container).attr('readonly', 'readonly');
       } else {
         $('select#select_'+skillCode, container).removeAttr('disabled');
-        $('input[name="customSkillList.' + skillCode + '.label"]', container).removeAttr('readonly');
+        $('input[name="fakeSkillList.' + skillCode + '.label"]', container).removeAttr('readonly');
       }
+    }
+    
+    // fill hidden skill input
+    if (elem.hasClass('skill-label-capture')) {
+      const skillKey = elem.data('key');
+      $('input[name="customSkillList.' + skillKey + '.label"]', container).val(elem.val());
     }
     
     // enable ability
     if (elem.hasClass('apply_ability')) {
       const abilityCode = elem.data('ability');
       if (elem.prop('checked')) {
-        $('input[name="customAbilitiesList.' + abilityCode + '.label"]', container).attr('readonly', 'readonly');
+        $('input[name="fakeAbilityLabel.' + abilityCode + '.label"]', container).attr('readonly', 'readonly');
       } else {
-        $('input[name="customAbilitiesList.' + abilityCode + '.label"]', container).removeAttr('readonly');
+        $('input[name="fakeAbilityLabel.' + abilityCode + '.label"]', container).removeAttr('readonly');
       }
     }
     
-    // select ability
+    // fill hidden ability input
+    if (elem.hasClass('ability-label-capture')) {
+      const abilityKey = elem.data('key');
+      $('input[name="customAbilitiesList.' + abilityKey + '.label"]', container).val(elem.val());
+    }
+    
+    // fill hidden skill ability from select
     if (elem.hasClass('ability_select')) {
       const selected = elem.find('option:selected').val();
       const skillCode = elem.data('skill');
@@ -354,10 +358,10 @@ class CustomSkills {
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
     let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
-
+    
     // see if we need to modify the _fallback translation for compatibility with tidy5esheet
     let isFallback = false;
-    if (typeof game.i18n.translations.DND5E === 'undefined') {
+    if (typeof game.i18n.translations.DND5E === 'undefined' && typeof game.i18n._fallback != 'undefined') {
       isFallback = true;
     }
     let abbrKey = '';
@@ -384,8 +388,10 @@ class CustomSkills {
       //console.log('customSkills',customSkills);
       for (let s in customSkills) {
         if (customSkills[s].applied) {
-          let label = customSkills[s].label;
-          systemSkills[s] = label;
+          systemSkills[s] = {
+            'label' : customSkills[s].label,
+            'ability' : customSkills[s].ability
+          };
           if (window._isDaeActive) {
             this.daeAutoFields(s, true)
           }

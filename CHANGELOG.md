@@ -10,3 +10,4 @@
 - v1.0.7: Dae Compatibility + removed owned actor limitation
 - v1.0.8: Fixed regression with tidy 5e sheet.
 - v1.1.0: First FVTT v10 release.
+- v1.1.1: Changed inner skill structure to reflect dnd5e system latest update + bugfix
