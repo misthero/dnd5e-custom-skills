@@ -14,6 +14,7 @@ Handlebars.registerHelper("inObject", (object, value) => {
  *  ▄▀▀░█▒█░▄▀▀░▀█▀░▄▀▄░█▄▒▄█░░░▄▀▀░█▄▀░█░█▒░░█▒░░▄▀▀░░▒▄▀▄▒█▀▄▒█▀▄░█▒░░█░▄▀▀▒▄▀▄░▀█▀░█░▄▀▄░█▄░█░░░▄▀▀▒██▀░▀█▀░▀█▀░█░█▄░█░▄▀▒░▄▀▀░░▒█▀░▄▀▄▒█▀▄░█▄▒▄█
 ░*  ▀▄▄░▀▄█▒▄██░▒█▒░▀▄▀░█▒▀▒█▒░▒▄██░█▒█░█▒█▄▄▒█▄▄▒▄██▒░░█▀█░█▀▒░█▀▒▒█▄▄░█░▀▄▄░█▀█░▒█▒░█░▀▄▀░█▒▀█▒░▒▄██░█▄▄░▒█▒░▒█▒░█░█▒▀█░▀▄█▒▄██▒░░█▀░▀▄▀░█▀▄░█▒▀▒█
  */
+ 
 class CustomSkillsForm extends FormApplication {
     
   static get defaultOptions() {
@@ -31,7 +32,6 @@ class CustomSkillsForm extends FormApplication {
         { abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills },
         this.reset ? mergeObject(CustomSkills.defaultSettings, {requireSave:true}) : mergeObject(CustomSkills.settings, {requireSave:false}));
       this.reset = false;
-      // console.log('getData', data);
       return data;
   }
 
@@ -76,42 +76,25 @@ class CustomSkillsForm extends FormApplication {
     } else {
       newAbilities = mergeObject(oldSettings.customAbilitiesList, Form.customAbilitiesList, { insertKeys: true, insertValues: true, overwrite:true });
     };
-
+    // modify system variables
+    CustomSkills.applyToSystem();
+    
     await this.update(newSkills, newAbilities);
     
     return this.render();
   }
   
   async update(newSkills, newAbilities) {
-    const keys_sk = Object.keys(newSkills);
-    const keys_ab = Object.keys(newAbilities);
-  
-    const total = keys_sk.length + keys_ab.length;
-
-    let message = game.i18n.localize(MODULE_NAME + '.processingSkills');;
-    let percent = 0;
-    let count = 0;
-    
-    // finally add skills and abilities to actors
+    // add skills and abilities to actors
     for (let s in newSkills) {
       if(newSkills[s].applied)
         CustomSkills.addSkillToActors(s);
-      count++;
-      percent = Math.round((count / total) * 100);
-      SceneNavigation.displayProgressBar({label: message, pct: percent });
     }
     
-    message = game.i18n.localize(MODULE_NAME + '.processingAbilities');
     for (let a in newAbilities) {
       if(newAbilities[a].applied == true)
         CustomSkills.addAbilityToActor(a);
-      count++;
-      percent = Math.round((count / total) * 100);
-      SceneNavigation.displayProgressBar({label: message, pct: percent });
     }
-    
-    // modify system variables
-    CustomSkills.applyToSystem();
     
     // clean leftovers on players actors
     await CustomSkills.cleanActors();
@@ -289,19 +272,7 @@ class CustomSkills {
   }
   
   static getBaseSkill() {
-    return {
-      value: 0,
-      ability: "str",
-      bonuses: {
-        check: '',
-        passive: '',
-      },
-      mod: 0,
-      passive: 0,
-      total: 0,
-      label: "",
-      applied: 0
-    };
+    return foundry.utils.deepClone(game.system.template.Actor.templates.creature.skills.acr);
   }
 
   static debug(string) {
@@ -527,10 +498,7 @@ class CustomSkills {
     if (total > 0) {
       keys.forEach((key, index) => {
         let Actor = charactersToAddSkill[key];
-        let updatedData = {
-            [`system.skills.${skillCode}`]: skillToAdd
-        };
-        Actor.update(updatedData);
+        Actor.reset();
       })
     }
   }
@@ -546,7 +514,6 @@ class CustomSkills {
     }
     
     let characters = this.getPlayerActors();
-    //console.log('CHARACTErS:',characters);
     let charactersToAddAbility = characters.filter(s => s.system.abilities.hasOwnProperty(abilityCode) == false);
     const keys = Object.keys(charactersToAddAbility);
     
@@ -586,7 +553,6 @@ class CustomSkills {
 }
 
 function addLabels(app, html, data) {
-  //console.log(data);
   // new classes for ui and css purposes
   html.find(".skills-list").addClass("custom-skills");
   html.find(".ability-scores").addClass("custom-abilities");
@@ -595,8 +561,6 @@ function addLabels(app, html, data) {
   const hiddenSkills = CustomSkills.getHiddenSkills();
   const hiddenAbilities = CustomSkills.getHiddenAbilities();
   const skillRowSelector = ".skills-list .skill";
-  
-  //console.log(skillList);
   
   html.find(skillRowSelector).each(function() {
     const skillElem = $(this);

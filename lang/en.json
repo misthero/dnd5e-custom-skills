@@ -15,6 +15,6 @@
     "dnd5e-custom-skills.hideAbilities": "Hide Abilities",
     "dnd5e-custom-skills.save": "Apply changes to world",
     "dnd5e-custom-skills.reset": "Reset",
-    "dnd5e-custom-skills.afterReset": "Please click 'Apply changes to world' after reset."
-
+    "dnd5e-custom-skills.afterReset": "Please click 'Apply changes to world' after reset.",
+    "dnd5e-custom-skills.updateDone": "Update Completed."
 }
