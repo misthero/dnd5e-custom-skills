@@ -76,6 +76,7 @@ class CustomSkillsForm extends FormApplication {
     } else {
       newAbilities = mergeObject(oldSettings.customAbilitiesList, Form.customAbilitiesList, { insertKeys: true, insertValues: true, overwrite:true });
     };
+    
     // modify system variables
     CustomSkills.applyToSystem();
     
