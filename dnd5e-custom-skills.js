@@ -46,64 +46,49 @@ class CustomSkillsForm extends FormApplication {
     let Form = mergeObject({},formData , { insertKeys: true, insertValues: true, overwrite: true });
     const oldSettings = CustomSkills.settings;
     
-    let newSkills;
-    let newAbilities;
+    let newSkills = {};
+    let newAbilities = {};
     let newSettings = mergeObject(oldSettings, Form);
-
+    
+    // check if skills have been removed 
+    if (Form.skillNum < CustomSkills.countObject(oldSettings.customSkillList)) {
+      let count = 0;
+      for (let a in Form.customSkillList) {
+        if (count < Form.skillNum){
+          newSkills[a] = Form.customSkillList[a];
+          count++;
+        }
+      }
+      newSettings.customAbilitiesList = newSkills;
+    } else {
+      newSkills = Form.customSkillList;
+    }
+    
+    // check if abilities have been removed 
+    if (Form.abilitiesNum < CustomSkills.countObject(oldSettings.customAbilitiesList)) {
+      let count = 0;
+      for (let a in Form.customAbilitiesList) {
+        if (count < Form.abilitiesNum){
+          newAbilities[a] = Form.customAbilitiesList[a];
+          count++;
+        }
+      }
+      newSettings.customAbilitiesList = newAbilities;
+    } else {
+      newAbilities = Form.customAbilitiesList;
+    } 
+    
     // update settings
     await game.settings.set(MODULE_NAME, 'settings', newSettings);
-    
-    // check if skills have been added or removed 
-    if (Form.skillNum < oldSettings.skillNum) {
-      newSkills = mergeObject(Form.customSkillList, oldSettings.customSkillList, { insertKeys: false, insertValues: false, overwrite:false  });
-      for (let removekey in oldSettings.customSkillList) {
-        if (typeof newSkills[removekey] == 'undefined') {
-          applyToSystem(removekey);
-        }
-      }
-    } else {
-      newSkills = mergeObject(oldSettings.customSkillList, Form.customSkillList, { insertKeys: true, insertValues: true, overwrite:true });
-    };
-    
-    // check if abilities have been added or removed 
-    if (Form.abilitiesNum < oldSettings.abilitiesNum) {
-      newAbilities = mergeObject(Form.customAbilitiesList, oldSettings.customAbilitiesList, { insertKeys: false, insertValues: false, overwrite:false  });
-      for (let removekey in oldSettings.customAbilitiesList) {
-        if (typeof newAbilities[removekey] == 'undefined') {
-          applyToSystem(removekey);
-        }
-      }
-    } else {
-      newAbilities = mergeObject(oldSettings.customAbilitiesList, Form.customAbilitiesList, { insertKeys: true, insertValues: true, overwrite:true });
-    };
     
     // modify system variables
     CustomSkills.applyToSystem();
     
-    await this.update(newSkills, newAbilities);
+    await CustomSkills.updateActors(newSkills, newAbilities);
     
     return this.render();
   }
   
-  async update(newSkills, newAbilities) {
-    // add skills and abilities to actors
-    for (let s in newSkills) {
-      if(newSkills[s].applied)
-        CustomSkills.addSkillToActors(s);
-    }
-    
-    for (let a in newAbilities) {
-      if(newAbilities[a].applied == true)
-        CustomSkills.addAbilityToActor(a);
-    }
-    
-    // clean leftovers on players actors
-    await CustomSkills.cleanActors();
-    ui.notifications.info(game.i18n.localize(MODULE_NAME + '.updateDone'));
-    
-    return true;
-  }
-    
   activateListeners(html) {
     super.activateListeners(html);
     html.find('button[name="reset"]').click(this.onReset.bind(this));
@@ -191,6 +176,10 @@ Hooks.on('init', () => {
         break;
       }
     }
+    
+    window.dnd5eCustomSkills = function(action, params) {
+      return CustomSkills.integration(action, params);
+    };
 });
 
 /* 
@@ -204,7 +193,6 @@ class CustomSkills {
     // skills
     const oldSkillNum = Object.keys(csSettings.customSkillList).length;
     const oldAbilityNum = Object.keys(csSettings.customAbilitiesList).length;
-    
     
     if (csSettings.skillNum > oldSkillNum) {
       // there are more skills than before
@@ -279,6 +267,12 @@ class CustomSkills {
   static debug(string) {
     $('#cs-debug_box').append('<span>' + string + '<span>');
   }
+  
+  static updateSettings(newSettings) {
+    const oldSettings = CustomSkills.settings;
+    let merged_settings = mergeObject(oldSettings, newSettings);
+    game.settings.set(MODULE_NAME, 'settings', merged_settings);
+  }
 
   static isActorCharacter(actor) {
     return getProperty(actor, "type") == "character";
@@ -314,10 +308,278 @@ class CustomSkills {
     let csSettings = CustomSkills.settings;
     return csSettings.hiddenSkills;
   }
+  static getCurrentSkillNum() {
+    let csSettings = CustomSkills.settings;
+    return csSettings.skillNum;
+  }
+  static getCurrentAbilitiesNum() {
+    let csSettings = CustomSkills.settings;
+    return csSettings.abilitiesNum;
+  }
   //create abbreviation key for i18n (tidy5e sheet pull from there when showing abilities)
   static getI18nKey(string) {
     let key = string.charAt(0).toUpperCase() + string.slice(1);
     return 'Ability' + key + 'Abbr';
+  }
+  
+  static countObject(obj) {
+    return Object.keys(obj).length
+  }
+  
+  /**
+  * get: param (string optional); ['skills','abilities','hiddenSkills','hiddenAbilities']
+  * add: param (object required);
+  * update: param (object required);
+  **/
+  
+  static integration(action, params){
+    if (typeof action !== 'undefined') {
+      switch (action) {
+        case 'get' : 
+          return this._integrationGet(params);
+        break;
+        case 'add' : 
+          return this._integrationAdd(params);
+        break;
+        case 'update' : 
+          return this._integrationChange(params);
+        break;
+        default: 
+          return {'error': 'Action parameter unknown'};
+      }
+    } else {
+      return {'error': 'Missing "action" paramter(string)'}
+    }
+  };
+  
+  static _integrationGet(string) {
+    if (typeof string == 'undefined')
+      return CustomSkills.settings;
+    switch (string) {
+      case 'skills' : 
+        return this.getCustomSkillList();
+      break;
+      case 'abilities' : 
+        return this.getCustomAbilitiesList();
+      break;
+      case 'hiddenSkills' : 
+        return this.getHiddenSkills();
+      break;
+      case 'hiddenAbilities' : 
+        return this.getHiddenAbilities();
+      default: 
+        return {'error': 'Action parameter unknown'};
+    }
+    
+  }
+  /* params object
+    'skills': {
+      0: {
+        'label': 'newSkill 1',
+        'ability': 'str'
+      },
+      1: {
+        'label': 'newSkill 2',
+        'ability': 'dex'
+      },
+      2: {
+        'label': 'newSkill 3',
+        'ability': 'str'
+      },
+      3: {
+        'label': 'newSkill 4',
+        'ability': 'str'
+      }
+    },
+    'abilities' = {
+      0: {
+        'label': 'new Ability 1'
+      },
+      1: {
+        'label': 'new Ability 2'
+      },
+      2: {
+        'label': 'new Ability 3'
+      },
+      3: {
+        'label': 'new Ability 4'
+      }
+    };
+  */
+  
+  static _integrationAdd(dataObject){
+    let response = [];
+    
+    if ('skills' in dataObject) {
+      response['skills'] = this.addSkill(dataObject.skills);
+    }
+    if ('abilities' in dataObject) {
+      response['abilities'] = this.addSkill(dataObject.skills);
+    }
+    
+    return response;
+  }
+  
+  static addSkill(newSkills) {
+    if (typeof newSkills == 'undefined' || newSkills == 'help') {
+        return {'error': 'To add skills you need to set an object parameter containing the new skills'};
+    }
+    // check required options
+    let errors = [];
+    for (let ns in newSkills) {
+      if (typeof newSkills[ns].ability == 'undefined')
+        errors.push('Missing required "ability" key , (value type:string)');
+      if (typeof newSkills[ns].label == 'label')
+        errors.push('Missing required "label" key , (value type:string)');
+    }
+    if (errors.length)
+      return errors;
+    
+    let settings = CustomSkills.settings;
+    let countActive = 0;
+    const countNewSkills = this.countObject(newSkills);
+    const countOldSkills = this.countObject(settings.customSkillList);
+    let countAdded = 0;
+    for (let s in settings.customSkillList){
+      if (settings.customSkillList[s].applied) {
+        countActive++;
+      } else {
+        var newSkillClean = {
+          'label':newSkills[countAdded].label,
+          'ability':newSkills[countAdded].ability,
+          'applied':1
+        };
+        settings.customSkillList[s] = mergeObject(this.getBaseSkill(),newSkillClean);
+        countAdded++;
+      }
+    }
+    if (countAdded < countNewSkills) {
+      var newmax = countNewSkills + countAdded;
+      for (let n = (countNewSkills - countAdded); n <= newmax; n++) {
+        var newSkillClean = {
+          'label':newSkills[countAdded].label,
+          'ability':newSkills[countAdded].ability,
+          'applied':1
+        };
+        settings.customSkillList['cus_'+n] = mergeObject(this.getBaseSkill(),newSkillClean);
+        countAdded++;
+      }
+      // update skill number
+      settings.skillNum = Object.keys(settings.customSkillList).length;
+      this.updateSettings(settings);
+    }
+    return settings.customSkillList;
+  }
+  
+  static addAbility(newAbility) {
+    if (typeof newAbility == 'undefined' || newAbility == 'help') {
+        return {'error': 'To add Abilities you need to set an object parameter containing the new Abilities'};
+    }
+    
+    // check required options
+    let errors = [];
+    for (let ns in newAbility) {
+      if (typeof newAbility[ns].label == 'label')
+        errors.push('Missing required "label" key, (value type:string)');
+    }
+    if (errors.length)
+      return errors;
+    
+    let settings = CustomSkills.settings;
+    let countActive = 0;
+    const countNewAbilities = Object.keys(newAbility).length;
+    const countOldAbilities = Object.keys(settings.customAbilitiesList).length;
+    
+    let countAdded = 0;
+    for (let a in settings.customAbilitiesList){
+      if (settings.customAbilitiesList[a].applied) {
+        countActive++;
+      } else {
+        var newAbilityClean = {
+          'label':newAbility[countAdded].label,
+          'applied':1
+        };
+        settings.customAbilitiesList[a] = newAbilityClean;
+        countAdded++;
+      }
+    }
+    if (countAdded < countNewAbilities) {
+      var newmax = countNewAbilities + countAdded;
+      for (let n = (countNewAbilities - countAdded); n <= newmax; n++) {
+        console.log('N:',n,' newmax: ', newmax);
+        var newAbilityClean = {
+          'label':newAbility[countAdded].label,
+          'applied':1
+        };
+        settings.customAbilitiesList['cus_'+n] = newAbilityClean;
+        countAdded++;
+      }
+      // update abilities number
+      settings.abilitiesNum = Object.keys(settings.customAbilitiesList).length;
+      this.updateSettings(settings);
+    }
+    return settings.customAbilitiesList;
+  }
+  
+  /*
+  * Modify existing skills or abilities
+  * to remove/disable a skill: {skills: {[skillkey]: {applied:false}}}
+  * to remove/disable an ability: {abilities: {[abilitykey]: {applied:false}}}
+  * skill or ability key must exist
+  * params: object
+  * 
+  * {
+      skills: {
+        "cus_X": {
+          "label": "Skill Name" (str)
+          "ability": "dex" (str)
+          "applied": true/false (bool)
+        }
+      },
+      abilities: {
+        "label": "Ability Name" (str)
+        "applied": true/false (bool)
+      }
+  */
+  static _integrationChange(dataObject){
+    
+    let settings = CustomSkills.settings;
+    let skills = settings.customSkillList;
+    let abilities = settings.customAbilitiesList;
+    
+    let modSk = false;
+    let modAb = false;
+    
+    for (let d in dataObject) {
+      if (d == 'skills') {
+        for (let sk in dataObject[d]) {
+          if (typeof skills[sk] !== 'undefined'){
+            skills[sk] = mergeObject(skills[sk], dataObject[d][sk]);
+            if (!modSk)
+              modSk = true;
+          }
+        }
+      } else if (d == 'abilities') {
+        for (let ab in dataObject[d]) {
+          if (typeof abilities[ab] !== 'undefined'){
+            abilities[ab] = mergeObject(abilities[ab], dataObject[d][ab]);
+            if (!modAb)
+              modAb = true;
+          }
+        }
+      }
+    }
+    
+    var result = [];
+    
+    if (modSk)
+      settings.customSkillList = result['skills'] = skills;
+    if (modAb)
+      settings.customAbilitiesList = result['abilities'] = abilities;
+    
+    this.updateSettings(settings);
+    
+    return result;
   }
 
   /* 
@@ -326,7 +588,7 @@ class CustomSkills {
     All changes are in memory and temporary, and should be reapplied when needed.
     No modification is made to dnd5e system.
   */
-  static applyToSystem(removeCode) {
+  static applyToSystem() {
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
     let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
@@ -338,77 +600,91 @@ class CustomSkills {
     }
     let abbrKey = '';
     
-    if (typeof removeCode != 'undefined') {
-      abbrKey = this.getI18nKey(removeCode);
-      // removing leftover
-      if (typeof systemSkills[removeCode] != 'undefined')
-        systemSkills = CustomSkills.removeKey(systemSkills, removeCode);
-      if (typeof systemAbilities[removeCode] != 'undefined')
-        systemAbilities = CustomSkills.removeKey(systemAbilities, removeCode);
-      if (typeof systemAbilityAbbr[removeCode] != 'undefined')
-        systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, removeCode);
-      if (isFallback) {
-        if (typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
-          game.i18n._fallback.DND5E = CustomSkills.removeKey(game.i18n._fallback.DND5E, abbrKey);
-      } else {
+    const skillKeys = Object.keys(systemSkills).filter(k => k.startsWith('cus_'));
+    const abilityKeys = Object.keys(systemAbilities).filter(k => k.startsWith('cua_'));
+    
+    let customSkills = this.getCustomSkillList();
+    
+    console.log('customSkills[apply to system]',customSkills);
+    
+    // remove extra skills keys
+    for (let r = 0; r < skillKeys.length; r++) {
+      if (typeof customSkills[skillKeys[r]] === 'undefined'){
+        console.log('removing', skillKeys[r], systemSkills[skillKeys[r]])
+        systemSkills = this.removeKey(systemSkills, skillKeys[r]);
+      }
+    }
+    
+    let customAbilities = this.getCustomAbilitiesList();
+    // remove extra abilities keys
+    for (let x = 0; x < abilityKeys.length; x++) {
+      if (typeof customAbilities[abilityKeys[x]] === 'undefined'){
+        abbrKey = this.getI18nKey(abilityKeys[x]);
+        console.log('removing', abilityKeys[x], systemAbilities[abilityKeys[x]])
+        systemAbilities = this.removeKey(systemAbilities, abilityKeys[x]);
+        systemAbilityAbbr = this.removeKey(systemAbilityAbbr, abbrKey);
         if (typeof game.i18n.translations.DND5E[abbrKey] != 'undefined')
-          game.i18n.translations.DND5E = CustomSkills.removeKey(game.i18n.translations.DND5E, abbrKey);
+          game.i18n.translations.DND5E = this.removeKey(game.i18n.translations.DND5E, abbrKey);
+        if (isFallback && typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
+          game.i18n._fallback.DND5E = this.removeKey(game.i18n._fallback.DND5E, abbrKey);
       }
-    } else {
-      // add or remove the rest 
-      let customSkills = CustomSkills.getCustomSkillList();
-      //console.log('customSkills',customSkills);
-      for (let s in customSkills) {
-        if (customSkills[s].applied) {
-          systemSkills[s] = {
-            'label' : customSkills[s].label,
-            'ability' : customSkills[s].ability
-          };
-          if (window._isDaeActive) {
-            this.daeAutoFields(s, true)
-          }
-        } else if (typeof systemSkills[s] != "undefined") {
-          systemSkills = CustomSkills.removeKey(systemSkills, s);
+    }
+    
+    
+    // add skills
+    for (let s in customSkills) {
+      if (customSkills[s].applied) {
+        systemSkills[s] = {
+          'label' : customSkills[s].label,
+          'ability' : customSkills[s].ability
+        };
+        if (window._isDaeActive) {
+          this.daeAutoFields(s, true)
         }
-      }
-      
-      let customAbilities = CustomSkills.getCustomAbilitiesList();
-      //console.log('customAbilities',customAbilities);
-      for (let a in customAbilities) {
-        abbrKey = this.getI18nKey(a);
-        if (customAbilities[a].applied) {
-          let label = customAbilities[a].label;
-          systemAbilities[a] = label;
-          systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
-          if (isFallback) {
-            game.i18n._fallback.DND5E[abbrKey] = systemAbilityAbbr[a];
-          } else {
-            game.i18n.translations.DND5E[abbrKey] = systemAbilityAbbr[a];
-          }
-          if (window._isDaeActive) {
-            this.daeAutoFields(a); 
-          }
-        } else {
-          // not appled, we should remove it.
-          if (typeof systemAbilities[a] != "undefined") {
-            systemAbilities = CustomSkills.removeKey(systemAbilities, a);
-          }
-          if (typeof systemAbilityAbbr[a] != "undefined") {
-            systemAbilityAbbr = CustomSkills.removeKey(systemAbilityAbbr, a);
-          }
-
-          if (isFallback) {
-            if (typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
-              game.i18n._fallback.DND5E = CustomSkills.removeKey(game.i18n._fallback.DND5E, abbrKey);
-          } else {
-            //console.log('cust',game.i18n.translations);
-            if (typeof game.i18n.translations.DND5E[abbrKey] !== 'undefined')
-              game.i18n.translations.DND5E = CustomSkills.removeKey(game.i18n.translations.DND5E, abbrKey);
-          }
-          
+      } else {
+        // remove not applied skills
+        if (typeof systemSkills[s] != "undefined") {
+          systemSkills = this.removeKey(systemSkills, s);
         }
       }
     }
+    
+    // add abilities
+    for (let a in customAbilities) {
+      abbrKey = this.getI18nKey(a);
+      if (customAbilities[a].applied) {
+        let label = customAbilities[a].label;
+        systemAbilities[a] = label;
+        systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
+        if (isFallback) {
+          game.i18n._fallback.DND5E[abbrKey] = systemAbilityAbbr[a];
+        } else {
+          game.i18n.translations.DND5E[abbrKey] = systemAbilityAbbr[a];
+        }
+        if (window._isDaeActive) {
+          this.daeAutoFields(a); 
+        }
+      } else {
+        // not applied, we should remove it.
+        if (typeof systemAbilities[a] != "undefined") {
+          systemAbilities = this.removeKey(systemAbilities, a);
+        }
+        if (typeof systemAbilityAbbr[a] != "undefined") {
+          systemAbilityAbbr = this.removeKey(systemAbilityAbbr, a);
+        }
+        
+        // remove translation
+        if (isFallback) {
+          if (typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
+            game.i18n._fallback.DND5E = this.removeKey(game.i18n._fallback.DND5E, abbrKey);
+        } else {
+          //console.log('cust',game.i18n.translations);
+          if (typeof game.i18n.translations.DND5E[abbrKey] !== 'undefined')
+            game.i18n.translations.DND5E = this.removeKey(game.i18n.translations.DND5E, abbrKey);
+        }
+      }
+    }
+    
     
     // update system config
     game.dnd5e.config.skills = systemSkills;
@@ -416,8 +692,27 @@ class CustomSkills {
     game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
   }
   
+  async updateActors(skills, abilities) {
+    // add skills and abilities to actors
+    for (let s in skills) {
+      if(skills[s].applied)
+        CustomSkills.addSkillToActors(s);
+    }
+    
+    for (let a in abilities) {
+      if(abilities[a].applied == true)
+        CustomSkills.addAbilityToActor(a);
+    }
+    
+    // clean leftovers on players actors
+    await CustomSkills.cleanActors();
+    ui.notifications.info(game.i18n.localize(MODULE_NAME + '.updateDone'));
+    
+    return true;
+  }
+  
   // remove every leftover from this module from actors charcaters
-  static cleanActors(){
+  static async cleanActors(){
     const characters = this.getPlayerActors();
     const skillList = this.getCustomSkillList();
     const abilityList = this.getCustomAbilitiesList();
@@ -471,6 +766,7 @@ class CustomSkills {
         Actor.update(updatedData);
       })
     }
+    return true;
   }
   
   /* utility function to remove a key from object 
