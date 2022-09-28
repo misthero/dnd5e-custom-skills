@@ -540,6 +540,7 @@ class CustomSkills {
         "label": "Ability Name" (str)
         "applied": true/false (bool)
       }
+    } 
   */
   static _integrationChange(dataObject){
     
@@ -692,7 +693,7 @@ class CustomSkills {
     game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
   }
   
-  async updateActors(skills, abilities) {
+  static async updateActors(skills, abilities) {
     // add skills and abilities to actors
     for (let s in skills) {
       if(skills[s].applied)
@@ -819,10 +820,7 @@ class CustomSkills {
     if (total > 0) {
       keys.forEach((key, index) => {
         let Actor = charactersToAddAbility[key];
-        let updatedData = {
-            [`system.abilities.${abilityCode}`]: newAbility
-        };
-        Actor.update(updatedData);
+        Actor.reset();
       })
     }
   }
