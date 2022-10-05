@@ -374,10 +374,10 @@ class CustomSkills {
           return data;
           break;
         default:
-          return { 'error': 'Action parameter unknown' };
+          return { 'error': 'Action parameter unknown. Allowed values are: "get", "add" or "update"' };
       }
     } else {
-      return { 'error': 'Missing required "action" paramter(string)' }
+      return { 'error': 'Missing required "action" parameter (string)' }
     }
   };
 
