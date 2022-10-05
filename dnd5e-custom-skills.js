@@ -339,6 +339,18 @@ class CustomSkills {
     return Object.keys(obj).length
   }
 
+  /* utility function to remove a key from object 
+   * params:
+   *  obj = the object to process
+   *  property = the propery to remove
+   */
+  static removeKey(obj, property) {
+    const {
+      [property]: unused, ...rest
+    } = obj;
+    return rest;
+  }
+
   /**
    * get: param (string optional); ['skills','abilities','hiddenSkills','hiddenAbilities']
    * add: param (object required);
@@ -451,8 +463,11 @@ class CustomSkills {
 
     if ('skills' in dataObject) {
       let resultSkills = this.addSkill(dataObject.skills, settings.customSkillList);
-      if (!'errors' in resultSkills)
+      if (!'errors' in resultSkills) {
         settings.customSkillList = resultSkills.skills;
+      } else {
+        response.skillerrors = resultSkills.errors;
+      }
       // update skill number
       settings.skillNum = this.countObject(settings.customSkillList);
 
@@ -460,9 +475,11 @@ class CustomSkills {
     }
     if ('abilities' in dataObject) {
       let resultAbilities = this.addAbility(dataObject.abilities, settings.customAbilitiesList);
-      if (!'errors' in resultAbilities)
+      if (!'errors' in resultAbilities) {
         settings.customAbilitiesList = resultAbilities.abilities;
-
+      } else {
+        response.abilityerrors = resultAbilities.errors;
+      }
       // update abilities number
       settings.abilitiesNum = this.countObject(settings.customAbilitiesList);
 
@@ -481,23 +498,31 @@ class CustomSkills {
 
     let results = {};
     // check required options and duplicates
-    results.errors = [];
+    let errors = [];
+    let errorskeys = [];
+    let uniqueSkills = newSkills;
     for (let ns in newSkills) {
       if (typeof newSkills[ns].ability == 'undefined')
         results.errors.push('Missing required "ability" key , (value type:string)');
       if (typeof newSkills[ns].label == 'label')
         results.errors.push('Missing required "label" key , (value type:string)');
       let duplicatedSkills = Object.values(currentSkills).filter((sk, i) => currentSkills['cus_' + i].label == newSkills[ns].label && currentSkills['cus_' + i].applied == true);
-      if (duplicatedSkills.length)
-        results.errors.push('Skill label already exists: ' + newSkills[ns].label);
+      if (duplicatedSkills.length) {
+        uniqueSkills = this.removeKey(uniqueSkills, ns);
+        errorskeys.push(ns)
+      }
     }
-    if (results.errors.length)
-      return results;
+
+    for (let e = 0; e < errorskeys.length; e++) {
+      errors.push('Skill label already exists: ' + newSkills[errorskeys[e]].label);
+    }
+
+    results.errors = errors;
 
     let countActive = 0;
-    const countNewSkills = this.countObject(newSkills);
+    const countNewSkills = this.countObject(uniqueSkills);
     const countOldSkills = this.countObject(currentSkills);
-    const newSkillsKeys = Object.keys(newSkills);
+    const newSkillsKeys = Object.keys(uniqueSkills);
     let countAdded = 0;
     for (let s in currentSkills) {
       if (currentSkills[s].applied) {
@@ -505,7 +530,7 @@ class CustomSkills {
       } else {
         if (typeof newSkillsKeys[countAdded] === 'undefined')
           break;
-        let skillData = newSkills[newSkillsKeys[countAdded]];
+        let skillData = uniqueSkills[newSkillsKeys[countAdded]];
         var newSkillClean = {
           'label': skillData.label,
           'ability': skillData.ability,
@@ -521,7 +546,7 @@ class CustomSkills {
       for (let n = 0; n <= newmax; n++) {
         if (typeof newSkillsKeys[countAdded] === 'undefined')
           break;
-        let skillData = newSkills[newSkillsKeys[countAdded]];
+        let skillData = uniqueSkills[newSkillsKeys[countAdded]];
         var newSkillClean = {
           'label': skillData.label,
           'ability': skillData.ability,
@@ -542,23 +567,29 @@ class CustomSkills {
 
     let results = {};
     // check required options
-    results.errors = [];
+    let errors = [];
+    let errorskeys = [];
+    let uniqueAbilities = newAbility;
     for (let na in newAbility) {
       if (typeof newAbility[na].label == 'label')
-        results.errors.push('Missing required "label" key, (value type:string)');
+        errors.push('Missing required "label" key, (value type:string)');
 
-      let duplicatedAbilities = Object.values(currentAbilities).filter((sk, i) => currentAbilities['cua_' + i].label == newAbility[na].label && currentAbilities['cua_' + i].applied == true);
-      if (duplicatedAbilities.length)
-        results.errors.push('Skill label already exists: ' + newAbility[na].label);
+      let duplicatedAbilities = Object.values(currentAbilities).filter((ab, i) => currentAbilities['cua_' + i].label == newAbility[na].label && currentAbilities['cua_' + i].applied == true);
+
+      if (duplicatedAbilities.length) {
+        uniqueAbilities = this.removeKey(uniqueAbilities, na);
+        errorskeys.push(na);
+      }
     }
 
-    if (results.errors.length)
-      return results;
+    for (let e = 0; e < errorskeys.length; e++) {
+      errors.push('Ability label already exists: ' + newAbility[errorskeys[e]].label);
+    }
 
     let countActive = 0;
-    const countNewAbilities = this.countObject(newAbility);
+    const countNewAbilities = this.countObject(uniqueAbilities);
     const countOldAbilities = this.countObject(currentAbilities);
-    const newAbKeys = Object.keys(newAbility);
+    const newAbKeys = Object.keys(uniqueAbilities);
     let countAdded = 0;
     for (let a in currentAbilities) {
       if (currentAbilities[a].applied) {
@@ -566,7 +597,7 @@ class CustomSkills {
       } else {
         if (typeof newAbKeys[countAdded] === 'undefined')
           break;
-        let abilityData = newAbility[newAbKeys[countAdded]];
+        let abilityData = uniqueAbilities[newAbKeys[countAdded]];
         var newAbilityClean = {
           'label': abilityData.label,
           'applied': 1
@@ -580,7 +611,7 @@ class CustomSkills {
       for (let n = 0; n <= newmax; n++) {
         if (typeof newAbKeys[countAdded] === 'undefined')
           break;
-        let abilityData = newAbility[newAbKeys[countAdded]];
+        let abilityData = uniqueAbilities[newAbKeys[countAdded]];
         var newAbilityClean = {
           'label': abilityData.label,
           'applied': 1
@@ -680,8 +711,8 @@ class CustomSkills {
     }
     let abbrKey = '';
 
-    const skillKeys = Object.keys(systemSkills).filter(k => k.startsWith('cus_'));
-    const abilityKeys = Object.keys(systemAbilities).filter(k => k.startsWith('cua_'));
+    const skillKeys = Object.keys(systemSkills).filter(k => k.startsWith('cus_') || k.startsWith('cua_'));
+    const abilityKeys = Object.keys(systemAbilities).filter(k => k.startsWith('cua_') || k.startsWith('cus_'));
 
     let customSkills = this.getCustomSkillList();
 
@@ -851,17 +882,7 @@ class CustomSkills {
     return true;
   }
 
-  /* utility function to remove a key from object 
-   * params:
-   *  obj = the object to process
-   *  property = the propery to remove
-   */
-  static removeKey(obj, property) {
-    const {
-      [property]: unused, ...rest
-    } = obj;
-    return rest;
-  }
+
 
   /** add single skill to every actor **/
   static addSkillToActors(skillCode) {
