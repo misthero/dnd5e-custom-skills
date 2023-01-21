@@ -28,8 +28,15 @@ class CustomSkillsForm extends FormApplication {
   }
 
   getData(options) {
-    let data = mergeObject({ abilities: CONFIG.DND5E.abilities, skills: CONFIG.DND5E.skills },
-      this.reset ? mergeObject(CustomSkills.defaultSettings, { requireSave: true }) : mergeObject(CustomSkills.settings, { requireSave: false }));
+    let data = mergeObject({
+      abilities: CONFIG.DND5E.abilities,
+      skills: CONFIG.DND5E.skills
+    },
+      this.reset ? mergeObject(CustomSkills.defaultSettings, {
+        requireSave: true
+      }) : mergeObject(CustomSkills.settings, {
+        requireSave: false
+      }));
     this.reset = false;
     return data;
   }
@@ -42,14 +49,18 @@ class CustomSkillsForm extends FormApplication {
   }
 
   async _updateObject(event, formData) {
-    let Form = mergeObject({}, formData, { insertKeys: true, insertValues: true, overwrite: true });
+    let Form = mergeObject({}, formData, {
+      insertKeys: true,
+      insertValues: true,
+      overwrite: true
+    });
     const oldSettings = CustomSkills.settings;
 
     let newSkills = {};
     let newAbilities = {};
     let newSettings = mergeObject(oldSettings, Form);
 
-    // check if skills have been removed 
+    // check if skills have been removed
     if (Form.skillNum < CustomSkills.countObject(oldSettings.customSkillList)) {
       let count = 0;
       for (let a in Form.customSkillList) {
@@ -63,7 +74,7 @@ class CustomSkillsForm extends FormApplication {
       newSkills = Form.customSkillList;
     }
 
-    // check if abilities have been removed 
+    // check if abilities have been removed
     if (Form.abilitiesNum < CustomSkills.countObject(oldSettings.customAbilitiesList)) {
       let count = 0;
       for (let a in Form.customAbilitiesList) {
@@ -162,7 +173,8 @@ Hooks.on('init', () => {
   game.settings.register(MODULE_NAME, "settings", {
     name: "Custom Skills Settings",
     scope: "world",
-    default: CustomSkills.defaultSettings,
+    default:
+      CustomSkills.defaultSettings,
     type: Object,
     config: false,
     //onChange: (x) => window.location.reload()
@@ -179,14 +191,16 @@ Hooks.on('init', () => {
   window.dnd5eCustomSkills = function (action, params, apply) {
     const results = CustomSkills._integration(action, params, apply);
     if (typeof results.then === "function") {
-      return results.then((result) => { return result });
+      return results.then((result) => {
+        return result
+      });
     } else {
       return results;
     }
   };
 });
 
-/* 
+/*
  *░▄▀▀░█▒█░▄▀▀░▀█▀░▄▀▄░█▄▒▄█░░░▄▀▀░█▄▀░█░█▒░░█▒░░░░▄▀▀░█▒░▒▄▀▄░▄▀▀░▄▀▀
  *░▀▄▄░▀▄█▒▄██░▒█▒░▀▄▀░█▒▀▒█▒░▒▄██░█▒█░█▒█▄▄▒█▄▄▒░░▀▄▄▒█▄▄░█▀█▒▄██▒▄██
  */
@@ -219,7 +233,10 @@ class CustomSkills {
       let abilities = {};
       for (let n = oldAbilityNum; n < csSettings.abilitiesNum; n++) {
         let name = 'cua_' + n;
-        abilities[name] = { label: "", applied: false };
+        abilities[name] = {
+          label: "",
+          applied: false
+        };
       }
       csSettings.customAbilitiesList = mergeObject(csSettings.customAbilitiesList, abilities);
     } else if (csSettings.abilitiesNum < oldAbilityNum) {
@@ -250,7 +267,10 @@ class CustomSkills {
     let abilities = {};
     for (let n = 0; n < abilitiesNum; n++) {
       let name = 'cua_' + n;
-      abilities[name] = { label: "", applied: false };
+      abilities[name] = {
+        label: "",
+        applied: false
+      };
     };
 
     return {
@@ -327,7 +347,9 @@ class CustomSkills {
   // refresh open actor sheets to view results
   static refreshOpenSheets() {
     const sheets = this.getOpenCharacterSheets();
-    sheets.forEach((sheet, index) => { sheet.render(); });
+    sheets.forEach((sheet, index) => {
+      sheet.render();
+    });
   }
   //create abbreviation key for i18n (tidy5e sheet pull from there when showing abilities)
   static getI18nKey(string) {
@@ -339,14 +361,15 @@ class CustomSkills {
     return Object.keys(obj).length
   }
 
-  /* utility function to remove a key from object 
+  /* utility function to remove a key from object
    * params:
    *  obj = the object to process
    *  property = the propery to remove
    */
   static removeKey(obj, property) {
     const {
-      [property]: unused, ...rest
+      [property]: unused,
+      ...rest
     } = obj;
     return rest;
   }
@@ -374,10 +397,14 @@ class CustomSkills {
           return data;
           break;
         default:
-          return { 'error': 'Action parameter unknown. Allowed values are: "get", "add" or "update"' };
+          return {
+            'error': 'Action parameter unknown. Allowed values are: "get", "add" or "update"'
+          };
       }
     } else {
-      return { 'error': 'Missing required "action" parameter (string)' }
+      return {
+        'error': 'Missing required "action" parameter (string)'
+      }
     }
   };
 
@@ -401,7 +428,9 @@ class CustomSkills {
 
     return true;
   }
-
+  /*
+    API get
+  */
   static _integrationGet(target) {
     if (typeof target == 'undefined')
       return CustomSkills.settings;
@@ -418,45 +447,15 @@ class CustomSkills {
       case 'hiddenAbilities':
         return this.getHiddenAbilities();
       default:
-        return { 'error': 'Action parameter unknown' };
+        return {
+          'error': 'Action parameter unknown'
+        };
     }
 
   }
-  /* params object
-    'skills': {
-      0: {
-        'label': 'newSkill 1',
-        'ability': 'str'
-      },
-      1: {
-        'label': 'newSkill 2',
-        'ability': 'dex'
-      },
-      2: {
-        'label': 'newSkill 3',
-        'ability': 'str'
-      },
-      3: {
-        'label': 'newSkill 4',
-        'ability': 'str'
-      }
-    },
-    'abilities' = {
-      0: {
-        'label': 'new Ability 1'
-      },
-      1: {
-        'label': 'new Ability 2'
-      },
-      2: {
-        'label': 'new Ability 3'
-      },
-      3: {
-        'label': 'new Ability 4'
-      }
-    };
+  /*
+    API add
   */
-
   static async _integrationAdd(dataObject, apply = false) {
     let response = {};
     let settings = CustomSkills.settings;
@@ -471,7 +470,10 @@ class CustomSkills {
       // update skill number
       settings.skillNum = this.countObject(settings.customSkillList);
 
-      response.skills = { 'list': settings.customSkillList, 'number': settings.skillNum };
+      response.skills = {
+        'list': settings.customSkillList,
+        'number': settings.skillNum
+      };
     }
     if ('abilities' in dataObject) {
       let resultAbilities = this.addAbility(dataObject.abilities, settings.customAbilitiesList);
@@ -483,7 +485,10 @@ class CustomSkills {
       // update abilities number
       settings.abilitiesNum = this.countObject(settings.customAbilitiesList);
 
-      response.abilities = { 'list': settings.customAbilitiesList, 'number': settings.abilitiesNum };
+      response.abilities = {
+        'list': settings.customAbilitiesList,
+        'number': settings.abilitiesNum
+      };
     }
 
     this._integrationUpdate(settings, apply);
@@ -493,7 +498,9 @@ class CustomSkills {
 
   static addSkill(newSkills, currentSkills) {
     if (typeof newSkills == 'undefined' || newSkills == 'help') {
-      return { 'error': 'To add skills you need to set an object parameter containing the new skills' };
+      return {
+        'error': 'To add skills you need to set an object parameter containing the new skills'
+      };
     }
 
     let results = {};
@@ -562,7 +569,9 @@ class CustomSkills {
 
   static addAbility(newAbility, currentAbilities) {
     if (typeof newAbility == 'undefined' || newAbility == 'help') {
-      return { 'error': 'To add Abilities you need to set an object parameter containing the new Abilities' };
+      return {
+        'error': 'To add Abilities you need to set an object parameter containing the new Abilities'
+      };
     }
 
     let results = {};
@@ -625,26 +634,12 @@ class CustomSkills {
   }
 
   /*
-  * Modify existing skills or abilities
-  * to remove/disable a skill: {skills: {[skillkey]: {applied:false}}}
-  * to remove/disable an ability: {abilities: {[abilitykey]: {applied:false}}}
-  * skill or ability key must exist
-  * params: object
-  * 
-  * {
-      skills: {
-        "cus_X": {
-          "label": "Skill Name" (str)
-          "ability": "dex" (str)
-          "applied": true/false (bool)
-        }
-      },
-      abilities: {
-        "label": "Ability Name" (str)
-        "applied": true/false (bool)
-      }
-    } 
-  */
+   * Modify existing skills or abilities
+   * to remove/disable a skill: {skills: {[skillkey]: {applied:false}}}
+   * to remove/disable an ability: {abilities: {[abilitykey]: {applied:false}}}
+   * skill or ability key must exist
+   * params: object
+   */
   static async _integrationChange(dataObject, apply) {
 
     let settings = CustomSkills.settings;
@@ -690,15 +685,18 @@ class CustomSkills {
     if (modSk || modAb)
       return response;
     else
-      return { 'error': 'invalid input parameters, nothing to do', 'data_sent': dataObject };
+      return {
+        'error': 'invalid input parameters, nothing to do',
+        'data_sent': dataObject
+      };
   }
 
-  /* 
-    Temporary modify the dnd5e skill config.
-    Optional parameter: "remove code" to remove a single skill from dnd5e config.
-    All changes are in memory and temporary, and should be reapplied when needed.
-    No modification is made to dnd5e system.
-  */
+  /*
+  Temporary modify the dnd5e skill config.
+  Optional parameter: "remove code" to remove a single skill from dnd5e config.
+  All changes are in memory and temporary, and should be reapplied when needed.
+  No modification is made to dnd5e system.
+   */
   static applyToSystem() {
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
@@ -736,7 +734,6 @@ class CustomSkills {
           game.i18n._fallback.DND5E = this.removeKey(game.i18n._fallback.DND5E, abbrKey);
       }
     }
-
 
     // add skills
     for (let s in customSkills) {
@@ -791,7 +788,6 @@ class CustomSkills {
         }
       }
     }
-
 
     // update system config
     game.dnd5e.config.skills = systemSkills;
@@ -881,8 +877,6 @@ class CustomSkills {
     }
     return true;
   }
-
-
 
   /** add single skill to every actor **/
   static addSkillToActors(skillCode) {

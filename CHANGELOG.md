@@ -13,3 +13,4 @@
 - v1.1.1: Changed inner skill structure to reflect dnd5e system latest update + bugfix
 - v1.1.2: Using new core actor.reset() to apply skills. Code cleanup.
 - v1.1.3: Added integration logic with other modules to get/add/update custom abilities and skills
+- v1.1.4: Increased skill limit from 20 to 50
