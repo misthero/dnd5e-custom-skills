@@ -2,11 +2,10 @@
   "id": "dnd5e-custom-skills",
   "title": "5e - Custom Abilities & Skills",
   "description": "FoundryVTT module for adding new character skills and abilities",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "compatibility": {
     "minimum": "10",
-    "verified": "10.288",
-    "maximum": "10"
+    "verified": "10.291"
   },
   "relationships": {
     "systems": [
@@ -15,7 +14,15 @@
         "type": "system",
         "manifest": "https://raw.githubusercontent.com/foundryvtt/dnd5e/master/system.json",
         "compatibility": {
-          "verified": "2.0.3"
+          "verified": "2.1.4"
+        }
+      },
+      {
+        "id": "pf2e",
+        "type": "system",
+        "manifest": "https://raw.githubusercontent.com//foundryvtt/pf2e/master/system.json",
+        "compatibility": {
+          "verified": "4.6.5"
         }
       }
     ]

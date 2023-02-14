@@ -1,135 +1,127 @@
-.skill_label {}
-.skill_name {}
-.skill_ability {}
-
-
 div#cs-debug_box {
-    height: 6em;
-    background: #333;
-    border-radius: 3px;
-    overflow-y: auto;
-    color: #4fda4f;
-    padding: 10px;
-    font-size: 11px;
-    font-family: sans-serif;
-    margin: 10px;
-    border: 5px solid #333;
+  height: 6em;
+  background: #333;
+  border-radius: 3px;
+  overflow-y: auto;
+  color: #4fda4f;
+  padding: 10px;
+  font-size: 11px;
+  font-family: sans-serif;
+  margin: 10px;
+  border: 5px solid #333;
 }
 
 div#cs-debug_box span {
-  display:block;
+  display: block;
 }
 
 #skill_input_template {
-  display:none;
+  display: none;
 }
 
 .dnd5e.sheet.actor.character ul.skills-list.custom-skills,
 .dnd5e.sheet.actor .ability-scores.custom-abilities {
-    height: 100%;
-    overflow: auto;
+  height: 100%;
+  overflow: auto;
 }
 
 .dnd5e.sheet.actor .custom-abilities .ability {
-    min-width: 100%;
+  min-width: 100%;
 }
 
 .dnd5e.sheet.actor.cb5es .custom-abilities .ability,
 .dnd5e.sheet.actor.dndbcs .custom-abilities .ability {
-  min-width:auto;
-}                                                    
-.dnd5e.sheet.actor .custom-abilities .ability > h4 {
-    overflow: hidden;
-    text-overflow: ellipsis;
+  min-width: auto;
+}
+
+.dnd5e.sheet.actor .custom-abilities .ability>h4 {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tidy5e.sheet.actor .ability-scores.custom-abilities .ability .config-button {
-    bottom: auto;
-    top: 5px;
-    left: calc(50% + 1.5em);
+  bottom: auto;
+  top: 5px;
+  left: calc(50% + 1.5em);
 }
 
 .tidy5e.sheet.actor .ability-scores.custom-abilities .ability .ability-modifiers .ability-proficiency {
-    bottom: 310%;
-    left: 0;
+  bottom: 310%;
+  left: 0;
 }
 
 .tidy5e.sheet.actor .ability-scores.custom-abilities {
-    flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 
 .tidy5e.sheet.actor .ability-scores.custom-abilities .ability {
-    margin-bottom: 0.7em;
+  margin-bottom: 0.7em;
 }
 
 .dnd5e-custom-skills input[type="text"][readonly],
 .dnd5e-custom-skills select[readonly] {
-    opacity: 0.7;
-    box-shadow: 0 0 0;
-    cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: 0 0 0;
+  cursor: not-allowed;
 }
 
 .dnd5e-custom-skills input[type="number"] {
-    width: 2em;
-    text-align: center;
-    margin-left: 1em;
+  width: 2em;
+  text-align: center;
+  margin-left: 1em;
 }
 
 .dnd5e-custom-skills .skill_element,
 .dnd5e-custom-skills .ability_element {
-    padding: 3px;
+  padding: 3px;
 }
 
-.dnd5e-custom-skills .skill_element .skill_apply, 
+.dnd5e-custom-skills .skill_element .skill_apply,
 .dnd5e-custom-skills .ability_element .ability_apply {
-  text-align:center;
+  text-align: center;
 }
 
-.dnd5e-custom-skills .skill_element:nth-child(even), 
+.dnd5e-custom-skills .skill_element:nth-child(even),
 .dnd5e-custom-skills .ability_element:nth-child(even) {
-    background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
-form .form-group.hide-abilities > label,
-form .form-group.hide-skills > label {
-  flex-basis:25%;
-  cursor:pointer;
+form .form-group.hide-abilities>label,
+form .form-group.hide-skills>label {
+  flex-basis: 25%;
+  cursor: pointer;
 }
 
 form .form-group.hide-abilities h3,
 form .form-group.hide-skills h3 {
-  flex-basis:100%;
+  flex-basis: 100%;
 }
 
 #skills-form .form-group.ability_element .ability_name {
-    flex: 3.2;
+  flex: 3.2;
 }
-.form-group.ability_element .ability_apply {}
 
 #skills-form .form-group.skill_element .skill_name {
-    flex: 2.1;
+  flex: 2.1;
 }
 
 #skills-form .form-group.skill_element .skill_ability {
-    flex: 1;
+  flex: 1;
 }
 
-.form-group.skill_element .skill_apply {}
-
-form .form-group.hide-abilities input, form .form-group.hide-skills input {
-    width: auto;
-    height: auto;
-    vertical-align: middle;
+form .form-group.hide-abilities input,
+form .form-group.hide-skills input {
+  width: auto;
+  height: auto;
+  vertical-align: middle;
 }
 
 .sheet.actor .ability-scores .ability.disabled,
-.sheet.actor.character ul.skills-list li.skill.disabled {
-  display:none;
+.sheet.actor.character ul.skills-list li.skill.disabled,
+.sheet.actor.npc ul.skills-list li.skill.disabled {
+  display: none;
 }
 
-.form-group.hide-abilities, .form-group.hide-skills {
-
-}
-#skills-form button.requireSave{
+#skills-form button.requireSave {
   background: orange;
 }
