@@ -15,3 +15,4 @@
 - v1.1.3: Added integration logic with other modules to get/add/update custom abilities and skills
 - v1.1.4: Increased skill limit from 20 to 50
 - v1.1.5: Fixed skills not hidden on NPC sheet
+- v1.1.6: dndbeyond sheet some compatibility fix

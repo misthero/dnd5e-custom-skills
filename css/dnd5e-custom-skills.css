@@ -19,42 +19,58 @@ div#cs-debug_box span {
   display: none;
 }
 
-.dnd5e.sheet.actor.character ul.skills-list.custom-skills,
-.dnd5e.sheet.actor .ability-scores.custom-abilities {
+.cs.dnd5e.sheet.actor.character.dnd5e ul.skills-list.custom-skills,
+.cs.dnd5e.sheet.actor.character.tidy5e ul.skills-list.custom-skills,
+.cs.dnd5e.sheet.actor.dnd5e .ability-scores.custom-abilities,
+.cs.dnd5e.sheet.actor.tidy5e .ability-scores.custom-abilities {
   height: 100%;
   overflow: auto;
 }
 
-.dnd5e.sheet.actor .custom-abilities .ability {
+
+
+.cs.dnd5e.sheet.actor .custom-abilities .ability {
   min-width: 100%;
 }
 
-.dnd5e.sheet.actor.cb5es .custom-abilities .ability,
-.dnd5e.sheet.actor.dndbcs .custom-abilities .ability {
+.cs.dnd5e.sheet.actor.cb5es .custom-abilities .ability,
+.cs.dnd5e.sheet.actor.dndbcs .custom-abilities .ability {
   min-width: auto;
 }
 
-.dnd5e.sheet.actor .custom-abilities .ability>h4 {
+.cs.dnd5e.sheet.actor .custom-abilities .ability>h4 {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.tidy5e.sheet.actor .ability-scores.custom-abilities .ability .config-button {
+.cs.tidy5e.sheet.actor .ability-scores .ability {
+  padding: 5px 10px;
+}
+
+.cs.tidy5e.sheet.actor .ability-scores .ability .ability-modifiers.value-footer {
+  position: static;
+}
+
+.cs.tidy5e.sheet.actor .ability-scores .ability .ability-modifiers .ability-proficiency {
+  position: absolute;
+  top: 0;
+  left: -10px;
   bottom: auto;
-  top: 5px;
-  left: calc(50% + 1.5em);
 }
 
-.tidy5e.sheet.actor .ability-scores.custom-abilities .ability .ability-modifiers .ability-proficiency {
-  bottom: 310%;
-  left: 0;
+.cs.tidy5e.sheet.actor .ability-scores .ability .ability-modifiers .config-button {
+  position: absolute;
+  top: 0;
+  right: -10px;
+  bottom: auto;
 }
 
-.tidy5e.sheet.actor .ability-scores.custom-abilities {
+.cs.tidy5e.sheet.actor .ability-scores,
+.cs.tidy5e.sheet.actor .ability-scores.custom-abilities {
   flex-wrap: wrap;
 }
 
-.tidy5e.sheet.actor .ability-scores.custom-abilities .ability {
+.cs.tidy5e.sheet.actor .ability-scores.custom-abilities .ability {
   margin-bottom: 0.7em;
 }
 
@@ -125,3 +141,36 @@ form .form-group.hide-skills input {
 #skills-form button.requireSave {
   background: orange;
 }
+
+/** dndbeyon sheet fix **/
+/*
+.cs.dnd5e.sheet.actor.dndbcs .abilities.flexrow {
+  width: 100%;
+  overflow: auto;
+}
+
+.cs.dnd5e.sheet.actor.dndbcs .ability-scores.custom-abilities {
+  min-width: 100%;
+  height: initial;
+}
+
+.cs.dnd5e.sheet.actor.character.dndbcs ul.skills-list.custom-skills {
+  height: initial;
+}
+
+
+.cs.dndbcs.sheet.actor.character .flex-column.col1 {
+  position: absolute;
+  top: 410px;
+  width: 220px;
+  bottom: 5px;
+  overflow: auto;
+}
+
+.cs.dndbcs.sheet.actor.character .sheet-body .flex-column.col5 {
+  flex: 1;
+  margin-top: 10px;
+  height: 489px;
+  margin-left: 220px;
+}
+*/

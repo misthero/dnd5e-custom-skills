@@ -943,9 +943,14 @@ class CustomSkills {
 }
 
 function addLabels(app, html, data) {
-  // new classes for ui and css purposes
-  html.find(".skills-list").addClass("custom-skills");
-  html.find(".ability-scores").addClass("custom-abilities");
+
+  //dndbeyond character sheet is unfixable, don't touch it.
+  if (!html.hasClass('dndbcs')) {
+    // new classes for ui and css purposes
+    html.addClass("cs");
+    html.find(".skills-list").addClass("custom-skills");
+    html.find(".ability-scores").addClass("custom-abilities");
+  }
 
   const skillList = CustomSkills.getCustomSkillList();
   const hiddenSkills = CustomSkills.getHiddenSkills();
