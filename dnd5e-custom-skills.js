@@ -790,9 +790,24 @@ class CustomSkills {
     }
 
     // update system config
-    game.dnd5e.config.skills = systemSkills;
+    game.dnd5e.config.skills = this._sortObject(systemSkills, 'label');
     game.dnd5e.config.abilities = systemAbilities;
     game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
+  }
+
+  /* helper function to sort objects converting to array first**/
+  static _sortObject(object, attribute) {
+    let sort, obj_array = [];
+    let result = {};
+
+    if (typeof attribute == 'undefined')
+      return object;
+
+    obj_array = Object.entries(object).map(([key, obj]) => ({ key, ...obj }));
+    sort = obj_array.sort((a, b) => a[attribute].localeCompare(b[attribute]));
+    result = sort.reduce((obj, item) => Object.assign(obj, { [item.key]: item }, delete item.key), {});
+
+    return result;
   }
 
   static async updateActors(skills, abilities) {
