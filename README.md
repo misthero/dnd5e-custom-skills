@@ -12,6 +12,7 @@ This module makes the necessary changes to player character actors data, no modi
 - Default DND5e Character Sheet: **full**
 - Tidy 5e Sheet: **full**
 - OGL Character sheet: **partial**
+- DND Beyond Character sheet: **partial**
 
 ### Module Usage
 
