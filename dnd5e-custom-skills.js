@@ -860,26 +860,53 @@ class CustomSkills {
         // here we store a list of keys representig properties we don't need anymore on actors.
         let skillsToRemove = [];
         let abilitiesToRemove = [];
+        let skillsToAdd = [];
+        let abilitiesToAdd = [];
 
         // prepare data to remove leftover skills
         for (let s = 0; s < skillKeys.length; s++) {
           let skillkey = skillKeys[s];
-          if (typeof skillList[skillkey] == 'undefined' || skillList[skillkey].applied == false) {
-            skillsToRemove.push(skillkey);
+          if(skillkey) {
+            if (typeof skillList[skillkey] == 'undefined' || skillList[skillkey].applied == false) {
+              skillsToRemove.push(skillkey);
+            }
+            else {
+              // Check if is not already set to be removed
+              if(!skillsToRemove[skillkey]) {
+                skillsToAdd.push(skillkey);
+              }
+            }
           }
         }
 
         //  prepare data to remove leftover abilities
         for (let a = 0; a < abilityKeys.length; a++) {
           let abilityKey = abilityKeys[a];
-          if (typeof abilityList[abilityKey] == 'undefined' || abilityList[abilityKey].applied == false) {
-            abilitiesToRemove.push(abilityKey);
+          if(abilityKey) {
+            if (typeof abilityList[abilityKey] == 'undefined' || abilityList[abilityKey].applied == false) {
+              abilitiesToRemove.push(abilityKey);
+            }
+            else {
+              // Check if is not already set to be removed
+              if(!abilitiesToRemove[abilityKey]) {
+                abilitiesToAdd.push(abilityKey);
+              }
+            }
           }
         }
 
         //we use foundry "-=" syntax to erase old properties
         skillsToRemove.forEach(key => updatedDataSkills[`system.skills.-=${key}`] = null);
         abilitiesToRemove.forEach(key => updatedDataAbilities[`system.abilities.-=${key}`] = null);
+
+        skillsToAdd.forEach(key => {
+          // The mergeObject is important for not lose single actor info
+          updatedDataSkills[`system.skills.${key}`] = mergeObject(actorSkills[key], skillList[key]);
+        });
+        abilitiesToAdd.forEach(key => {
+          // The mergeObject is important for not lose single actor info
+          updatedDataAbilities[`system.abilities.${key}`] = mergeObject(actorAbilities[key], abilityList[key]);
+        });
 
         // prepare the update actor data
         let updatedData = {
@@ -979,6 +1006,7 @@ function addLabels(app, html, data) {
     if (skillList.hasOwnProperty(skillKey)) {
       //add labels to existing skill
       data.system.skills[skillKey].label = skillList[skillKey].label;
+      // mergeObject(data.system.skills[skillKey],skillList[skillKey]);
       skillElem.find(".skill-name").text(skillList[skillKey].label);
     }
   });
