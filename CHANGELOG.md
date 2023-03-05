@@ -16,3 +16,4 @@
 - v1.1.4: Increased skill limit from 20 to 50
 - v1.1.5: Fixed skills not hidden on NPC sheet
 - v1.1.6: dndbeyond sheet some compatibility fix
+- v1.1.7: tidy5e-sheet fix css

@@ -53,21 +53,26 @@ div#cs-debug_box span {
 
 .cs.tidy5e.sheet.actor .ability-scores .ability .ability-modifiers .ability-proficiency {
   position: absolute;
-  top: 0;
-  left: -10px;
+  top: 3;
+  left: -5px;
   bottom: auto;
 }
 
 .cs.tidy5e.sheet.actor .ability-scores .ability .ability-modifiers .config-button {
   position: absolute;
-  top: 0;
-  right: -10px;
+  top: 3;
+  right: -5px;
   bottom: auto;
 }
 
 .cs.tidy5e.sheet.actor .ability-scores,
 .cs.tidy5e.sheet.actor .ability-scores.custom-abilities {
   flex-wrap: wrap;
+}
+
+.cs.tidy5e.sheet.actor.npc .profile-wrap .health {
+  bottom: auto;
+  top: 130px;
 }
 
 .cs.tidy5e.sheet.actor .ability-scores.custom-abilities .ability {
