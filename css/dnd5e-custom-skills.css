@@ -53,14 +53,14 @@ div#cs-debug_box span {
 
 .cs.tidy5e.sheet.actor .ability-scores .ability .ability-modifiers .ability-proficiency {
   position: absolute;
-  top: 3;
+  top: 3px;
   left: -5px;
   bottom: auto;
 }
 
 .cs.tidy5e.sheet.actor .ability-scores .ability .ability-modifiers .config-button {
   position: absolute;
-  top: 3;
+  top: 3px;
   right: -5px;
   bottom: auto;
 }
