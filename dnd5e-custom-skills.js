@@ -988,7 +988,7 @@ function addLabels(app, html, data) {
   /** hide skills **/
   for (let hs in hiddenSkills) {
     if (hiddenSkills[hs])
-      $('.skills-list .skill[data-skill="' + hs + '"]', html).addClass('disabled');
+      $('.skills-list .skill[data-key="' + hs + '"]', html).addClass('disabled');
   }
 
   /** hide abilities **/

@@ -63,19 +63,21 @@
         <div class="form-group hide-abilities">
             <h3><span class="fas fa-mask"></span> {{localize "dnd5e-custom-skills.hideAbilities"}}</h3>
             {{#each abilities as |name key|}}
-            <label>
-              <input type="checkbox" {{#if (lookup  ../hiddenAbilities key) }} checked {{/if}} name="hiddenAbilities.{{key}}" value="{{key}}" data-dtype="Boolean"/>
-              {{name}}
-            </label> {{/each}}
+                <label>
+                  <input type="checkbox" {{#if (lookup  ../hiddenAbilities key) }} checked {{/if}} name="hiddenAbilities.{{key}}" value="hiddenAbilities.{{key}}" data-dtype="Boolean"/>
+                  {{name.label}}
+                </label> 
+            {{/each}}
         </div>
         <hr>
         <div class="form-group hide-skills">
             <h3><span class="fas fa-mask"></span> {{localize "dnd5e-custom-skills.hideSkills"}}</h3>
             {{#each skills as |name key|}}
-            <label>
-              <input type="checkbox" {{#if (lookup ../hiddenSkills key) }} checked {{/if}} name="hiddenSkills.{{key}}" value="{{key}}" data-dtype="Boolean"/>
-              {{name.label}}
-            </label> {{/each}}
+                <label>
+                <input type="checkbox" {{#if (lookup ../hiddenSkills key) }} checked {{/if}} name="hiddenSkills.{{key}}" value="{{key}}" data-dtype="Boolean"/>
+                {{name.label}}
+                </label> 
+            {{/each}}
         </div>
         <!-- <div id="cs-debug_box"></div> -->
         <hr>
