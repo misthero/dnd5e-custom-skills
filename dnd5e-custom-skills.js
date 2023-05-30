@@ -233,10 +233,7 @@ class CustomSkills {
       let abilities = {};
       for (let n = oldAbilityNum; n < csSettings.abilitiesNum; n++) {
         let name = 'cua_' + n;
-        abilities[name] = {
-          label: "",
-          applied: false
-        };
+        abilities[name] = this.getBaseAbility(false);
       }
       csSettings.customAbilitiesList = mergeObject(csSettings.customAbilitiesList, abilities);
     } else if (csSettings.abilitiesNum < oldAbilityNum) {
@@ -267,10 +264,7 @@ class CustomSkills {
     let abilities = {};
     for (let n = 0; n < abilitiesNum; n++) {
       let name = 'cua_' + n;
-      abilities[name] = {
-        label: "",
-        applied: false
-      };
+      abilities[name] = this.getBaseAbility(false);
     };
 
     return {
@@ -285,6 +279,22 @@ class CustomSkills {
 
   static getBaseSkill() {
     return foundry.utils.deepClone(game.system.template.Actor.templates.creature.skills.acr);
+  }
+
+  static getBaseAbility(applied, label) {
+    let cleanAbility = foundry.utils.deepClone(game.system.template.Actor.templates.common.abilities.cha);
+    cleanAbility.type = "physical";
+    if (typeof applied === 'undefined') {
+      cleanAbility.applied = false;
+    } else {
+      cleanAbility.applied = applied;
+    }
+
+    if (typeof label != 'undefined') {
+      cleanAbility.label = label;
+      cleanAbility.abbreviation = label.slice(0, 3).toLowerCase();
+    }
+    return cleanAbility;
   }
 
   static debug(string) {
@@ -304,15 +314,11 @@ class CustomSkills {
 
   /* get actors with hasPlayerOwner property **/
   static getPlayerActors(excludeVehicles) {
-    let filtered = {};
     if (typeof excludeVehicles !== 'undefined' && excludeVehicles == true) {
-      //filtered = game.actors.filter(a => (a.hasPlayerOwner === true && a.type === 'character') === true);
       return game.actors.filter(a => (a.type === 'character' || a.type === 'npc') === true);
     } else {
-      //filtered = game.actors.filter(a => a.hasPlayerOwner === true);
       return game.actors.filter(a => (a.collectionName === 'actors') === true);
     }
-    return filtered;
   }
 
   /** helper functions to get specific settings */
@@ -387,15 +393,12 @@ class CustomSkills {
         case 'get':
           data = this._integrationGet(params);
           return data;
-          break;
         case 'add':
           data = this._integrationAdd(params, apply);
           return data;
-          break;
         case 'update':
           data = this._integrationChange(params, apply);
           return data;
-          break;
         default:
           return {
             'error': 'Action parameter unknown. Allowed values are: "get", "add" or "update"'
@@ -700,7 +703,6 @@ class CustomSkills {
   static applyToSystem() {
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
-    let systemAbilityAbbr = game.dnd5e.config.abilityAbbreviations;
 
     // see if we need to modify the _fallback translation for compatibility with tidy5esheet
     let isFallback = false;
@@ -727,7 +729,7 @@ class CustomSkills {
       if (typeof customAbilities[abilityKeys[x]] === 'undefined') {
         abbrKey = this.getI18nKey(abilityKeys[x]);
         systemAbilities = this.removeKey(systemAbilities, abilityKeys[x]);
-        systemAbilityAbbr = this.removeKey(systemAbilityAbbr, abbrKey);
+        //systemAbilityAbbr = this.removeKey(systemAbilityAbbr, abbrKey);
         if (typeof game.i18n.translations.DND5E[abbrKey] != 'undefined')
           game.i18n.translations.DND5E = this.removeKey(game.i18n.translations.DND5E, abbrKey);
         if (isFallback && typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
@@ -757,25 +759,25 @@ class CustomSkills {
     for (let a in customAbilities) {
       abbrKey = this.getI18nKey(a);
       if (customAbilities[a].applied) {
-        let label = customAbilities[a].label;
-        systemAbilities[a] = label;
-        systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
-        if (isFallback) {
+        systemAbilities[a] = this.getBaseAbility(customAbilities[a].applied, customAbilities[a].label);
+        // systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
+        /*if (isFallback) {
           game.i18n._fallback.DND5E[abbrKey] = systemAbilityAbbr[a];
         } else {
           game.i18n.translations.DND5E[abbrKey] = systemAbilityAbbr[a];
-        }
+        }*/
         if (window._isDaeActive) {
           this.daeAutoFields(a);
         }
       } else {
         // not applied, we should remove it.
-        if (typeof systemAbilities[a] != "undefined") {
+        /*if (typeof systemAbilities[a] != "undefined") {
           systemAbilities = this.removeKey(systemAbilities, a);
         }
         if (typeof systemAbilityAbbr[a] != "undefined") {
           systemAbilityAbbr = this.removeKey(systemAbilityAbbr, a);
         }
+        */
 
         // remove translation
         if (isFallback) {
@@ -792,7 +794,7 @@ class CustomSkills {
     // update system config
     game.dnd5e.config.skills = this._sortObject(systemSkills, 'label');
     game.dnd5e.config.abilities = systemAbilities;
-    game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
+    // game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
   }
 
   /* helper function to sort objects converting to array first**/

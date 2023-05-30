@@ -1,4 +1,4 @@
-# Changelog
+ # Changelog
 
 - v1.0.0: First public release.
 - v1.0.1: Better compatibility with tidy5esheet
@@ -17,3 +17,4 @@
 - v1.1.5: Fixed skills not hidden on NPC sheet
 - v1.1.6: dndbeyond sheet some compatibility fix
 - v1.1.7: tidy5e-sheet fix css
+- v1.2.0: dnd5e system v2.2+ compatibility. may not be compatible with previous versions

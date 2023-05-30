@@ -16,5 +16,8 @@
     "dnd5e-custom-skills.save": "Apply changes to world",
     "dnd5e-custom-skills.reset": "Reset",
     "dnd5e-custom-skills.afterReset": "Please click 'Apply changes to world' after reset.",
-    "dnd5e-custom-skills.updateDone": "Update Completed."
+    "dnd5e-custom-skills.updateDone": "Update Completed.",
+    "dnd5e-custom-skills.abilityType": "Ability Type",
+    "dnd5e-custom-skills.abilityTypeMental": "Mental",
+    "dnd5e-custom-skills.abilityTypePhysical": "Physical"
 }

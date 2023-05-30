@@ -16,6 +16,9 @@
     "dnd5e-custom-skills.save": "Applica modifiche al Mondo",
     "dnd5e-custom-skills.reset": "Reset",
     "dnd5e-custom-skills.afterReset": "Dopo il 'Reset' clicca di nuovo su 'Applica modifiche al mondo'.",
-    "dnd5e-custom-skills.updateDone": "Aggiornamento completato."
+    "dnd5e-custom-skills.updateDone": "Aggiornamento completato.",
+    "dnd5e-custom-skills.abilityType": "Tipo Abilità",
+    "dnd5e-custom-skills.abilityTypeMental": "Mentale",
+    "dnd5e-custom-skills.abilityTypePhysical": "Fisica"
 
 }

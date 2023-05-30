@@ -15,6 +15,13 @@
                     <input class="ability-label-capture" {{#if abilitydata.applied}}readonly{{/if}} type="text" data-key="{{a}}" name="fakeAbilityLabel.{{a}}.label" data-dtype="string" value="{{ abilitydata.label }}" />
                     <input type="hidden" name="customAbilitiesList.{{a}}.label" value="{{ abilitydata.label }}" data-dtype="string" />
                 </div>
+                <div class="ability_type">
+                    <div class="label">{{localize "dnd5e-custom-skills.abilityType"}}</div>
+                    <select name="customAbilitiesList.{{a}}.type">
+                        <option value="mental" data-dtype="string" {{#if (eq abilitydata.type "mental")}} selected {{/if}}>{{localize "dnd5e-custom-skills.abilityTypeMental"}}</option>
+                        <option value="physical" data-dtype="string" {{#if (eq abilitydata.type "physical")}} selected {{/if}}>{{localize "dnd5e-custom-skills.abilityTypePhysical"}}</option>
+                    </select>
+                </div>
                 <div class="ability_apply" data-ability="{{a}}">
                     <div class="label">{{localize "dnd5e-custom-skills.abilityApply"}}</div>
                     <input type="checkbox" class="apply_ability" data-ability="{{a}}" name="customAbilitiesList.{{a}}.applied" data-dtype="Boolean" {{checked abilitydata.applied}}/>
