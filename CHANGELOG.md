@@ -18,3 +18,4 @@
 - v1.1.6: dndbeyond sheet some compatibility fix
 - v1.1.7: tidy5e-sheet fix css
 - v1.2.0: dnd5e system v2.2+ compatibility. may not be compatible with previous versions
+- v1.2.1: fix a bug with new ability object in module configuration

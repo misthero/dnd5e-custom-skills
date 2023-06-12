@@ -4,7 +4,7 @@
     <form autocomplete="off" class="dnd5e-custom-skills" id="dnd5ecustomskillsform">
         <div class="form-group">
             <div class="label">{{localize "dnd5e-custom-skills.abilitiesNumLabel"}}
-                <input name="abilitiesNum" type="number" min="1" max="20" length="2" value="{{abilitiesNum}}" data-tooltip="{{localize 'dnd5e-custom-skills.abilitiesNumLabel' }}" />
+                <input name="abilitiesNum" type="number" min="1" max="100" length="2" value="{{abilitiesNum}}" data-tooltip="{{localize 'dnd5e-custom-skills.abilitiesNumLabel' }}" />
             </div>
         </div>
         <div class="custom-abilities-list">
@@ -32,7 +32,7 @@
         <hr>
         <div class="form-group">
             <div class="label">{{localize "dnd5e-custom-skills.skillNumLabel"}}
-                <input name="skillNum" type="number" min="1" max="50" value="{{skillNum}}" />
+                <input name="skillNum" type="number" min="1" max="200" value="{{skillNum}}" />
             </div>
         </div>
         <div class="custom-skill-list">
@@ -47,7 +47,7 @@
                     <div class="label">{{localize "dnd5e-custom-skills.skillAbility"}}</div>
                     <select data-skill="{{n}}" class="ability_select" {{#if skilldata.applied}}disabled{{/if}} id="select_{{n}}" style="flex: 1;">
                         {{#each ../abilities as |name key|}}
-                    <option {{#if (eq key skilldata.ability )}} selected {{/if}} value="{{key}}">{{name}}</option>
+                    <option {{#if (eq key skilldata.ability )}} selected {{/if}} value="{{key}}">{{name.label}}</option>
                         {{/each}}
                     </select>
                     <input type="hidden" name="customSkillList.{{n}}.ability" value="{{skilldata.ability}}" />
