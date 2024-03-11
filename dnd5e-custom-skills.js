@@ -10,6 +10,24 @@ Handlebars.registerHelper("inObject", (object, value) => {
   return false;
 });
 
+let dndV3 = false;
+
+var compareVersions = function (a, b) {
+  const versionA = a.split('.').map(Number);
+  const versionB = b.split('.').map(Number);
+  console.log("SP versionA", versionA);
+
+  for (let i = 0; i < Math.max(versionA.length, versionB.length); i++) {
+    const numA = versionA[i] || 0;
+    const numB = versionB[i] || 0;
+
+    if (numA < numB) return -1;
+    if (numA > numB) return 1;
+  }
+
+  return 0;
+}
+
 /**
  *  ▄▀▀░█▒█░▄▀▀░▀█▀░▄▀▄░█▄▒▄█░░░▄▀▀░█▄▀░█░█▒░░█▒░░▄▀▀░░▒▄▀▄▒█▀▄▒█▀▄░█▒░░█░▄▀▀▒▄▀▄░▀█▀░█░▄▀▄░█▄░█░░░▄▀▀▒██▀░▀█▀░▀█▀░█░█▄░█░▄▀▒░▄▀▀░░▒█▀░▄▀▄▒█▀▄░█▄▒▄█
 ░*  ▀▄▄░▀▄█▒▄██░▒█▒░▀▄▀░█▒▀▒█▒░▒▄██░█▒█░█▒█▄▄▒█▄▄▒▄██▒░░█▀█░█▀▒░█▀▒▒█▄▄░█░▀▄▄░█▀█░▒█▒░█░▀▄▀░█▒▀█▒░▒▄██░█▄▄░▒█▒░▒█▒░█░█▒▀█░▀▄█▒▄██▒░░█▀░▀▄▀░█▀▄░█▒▀▒█
@@ -160,6 +178,13 @@ Hooks.on('init', () => {
   //console.log('dnd5e-custom-skills init');
   //CONFIG.debug.hooks = true;
 
+  if (typeof game.dnd5e.version === 'string') {
+    dndV3 = compareVersions(game.dnd5e.version, '2.99.99') == 1;
+    console.log('SP dndversion3', dndV3);
+  } else {
+    console.log('SP isundefined version');
+  }
+
   game.settings.registerMenu(MODULE_NAME, MODULE_NAME, {
     name: MODULE_NAME + ".form",
     label: MODULE_NAME + ".form-title",
@@ -278,12 +303,28 @@ class CustomSkills {
   }
 
   static getBaseSkill() {
-    return foundry.utils.deepClone(game.system.template.Actor.templates.creature.skills.acr);
+    let skill;
+    if (dndV3) {
+      skill = foundry.utils.deepClone(game.system.config.skills.acr);
+      skill.icon = "";
+      skill.reference = "";
+    } else {
+      skill = foundry.utils.deepClone(game.system.template.Actor.templates.creature.skills.acr);
+    }
+    return skill;
+
   }
 
   static getBaseAbility(applied, label) {
-    let cleanAbility = foundry.utils.deepClone(game.system.template.Actor.templates.common.abilities.cha);
+    let cleanAbility;
+    if (dndV3) {
+      cleanAbility = foundry.utils.deepClone(game.system.config.abilities.cha);
+    } else {
+      cleanAbility = foundry.utils.deepClone(game.system.template.Actor.templates.common.abilities.cha);
+    }
+
     cleanAbility.type = "physical";
+    cleanAbility.reference = "";
     if (typeof applied === 'undefined') {
       cleanAbility.applied = false;
     } else {
@@ -915,7 +956,12 @@ class CustomSkills {
 
   /** add single ability to every actor **/
   static addAbilityToActor(abilityCode) {
-    const emptyAbility = game.system.template.Actor.templates.common.abilities.cha;
+    let emptyAbility;
+    if (dndV3) {
+      emptyAbility = game.system.config.abilities.cha;
+    } else {
+      emptyAbility = game.system.template.Actor.templates.common.abilities.cha;
+    }
     let newAbility = foundry.utils.deepClone(emptyAbility);
     const customAbilities = CustomSkills.getCustomAbilitiesList();
 
@@ -987,14 +1033,26 @@ function addLabels(app, html, data) {
 
   /** hide skills **/
   for (let hs in hiddenSkills) {
-    if (hiddenSkills[hs])
-      $('.skills-list .skill[data-key="' + hs + '"]', html).addClass('disabled');
+    if (hiddenSkills[hs]) {
+      if (dndV3) {
+        $('.skills li[data-key="' + hs + '"]', html).addClass('disabled');
+      } else {
+        $('.skills-list .skill[data-key="' + hs + '"]', html).addClass('disabled');
+      }
+    }
   }
 
   /** hide abilities **/
   for (let ha in hiddenAbilities) {
-    if (hiddenAbilities[ha])
-      $('.ability-scores .ability[data-ability ="' + ha + '"]', html).addClass('disabled');
+    if (hiddenAbilities[ha]) {
+      if (dndV3) {
+        $('.ability-scores .ability-score[data-ability ="' + ha + '"]', html).addClass('disabled');
+      } else {
+        $('.ability-scores .ability[data-ability ="' + ha + '"]', html).addClass('disabled');
+      }
+
+    }
+
   }
 
   return (app, html, data);

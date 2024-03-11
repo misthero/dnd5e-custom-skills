@@ -138,7 +138,11 @@ form .form-group.hide-skills input {
 }
 
 .sheet.actor .ability-scores .ability.disabled,
+/** dnd v3 **/
+.sheet.actor.character .ability-scores .ability-score.disabled,
 .sheet.actor.character ul.skills-list li.skill.disabled,
+/** dnd v3 **/
+.sheet.actor.character .sheet-body .skills>ul>li.disabled,
 .sheet.actor.npc ul.skills-list li.skill.disabled {
   display: none;
 }
