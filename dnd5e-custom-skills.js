@@ -15,7 +15,6 @@ let dndV3 = false;
 var compareVersions = function (a, b) {
   const versionA = a.split('.').map(Number);
   const versionB = b.split('.').map(Number);
-  console.log("SP versionA", versionA);
 
   for (let i = 0; i < Math.max(versionA.length, versionB.length); i++) {
     const numA = versionA[i] || 0;
@@ -28,6 +27,8 @@ var compareVersions = function (a, b) {
   return 0;
 }
 
+
+
 /**
  *  ▄▀▀░█▒█░▄▀▀░▀█▀░▄▀▄░█▄▒▄█░░░▄▀▀░█▄▀░█░█▒░░█▒░░▄▀▀░░▒▄▀▄▒█▀▄▒█▀▄░█▒░░█░▄▀▀▒▄▀▄░▀█▀░█░▄▀▄░█▄░█░░░▄▀▀▒██▀░▀█▀░▀█▀░█░█▄░█░▄▀▒░▄▀▀░░▒█▀░▄▀▄▒█▀▄░█▄▒▄█
 ░*  ▀▄▄░▀▄█▒▄██░▒█▒░▀▄▀░█▒▀▒█▒░▒▄██░█▒█░█▒█▄▄▒█▄▄▒▄██▒░░█▀█░█▀▒░█▀▒▒█▄▄░█░▀▄▄░█▀█░▒█▒░█░▀▄▀░█▒▀█▒░▒▄██░█▄▄░▒█▒░▒█▒░█░█▒▀█░▀▄█▒▄██▒░░█▀░▀▄▀░█▀▄░█▒▀▒█
@@ -36,7 +37,7 @@ var compareVersions = function (a, b) {
 class CustomSkillsForm extends FormApplication {
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       title: game.i18n.localize(MODULE_NAME + '.form-title'),
       id: 'skills-form',
       template: `modules/${MODULE_NAME}/templates/skills-config.html`,
@@ -46,13 +47,13 @@ class CustomSkillsForm extends FormApplication {
   }
 
   getData(options) {
-    let data = mergeObject({
+    let data = foundry.utils.mergeObject({
       abilities: CONFIG.DND5E.abilities,
       skills: CONFIG.DND5E.skills
     },
-      this.reset ? mergeObject(CustomSkills.defaultSettings, {
+      this.reset ? foundry.utils.mergeObject(CustomSkills.defaultSettings, {
         requireSave: true
-      }) : mergeObject(CustomSkills.settings, {
+      }) : foundry.utils.mergeObject(CustomSkills.settings, {
         requireSave: false
       }));
     this.reset = false;
@@ -67,7 +68,7 @@ class CustomSkillsForm extends FormApplication {
   }
 
   async _updateObject(event, formData) {
-    let Form = mergeObject({}, formData, {
+    let Form = foundry.utils.mergeObject({}, formData, {
       insertKeys: true,
       insertValues: true,
       overwrite: true
@@ -76,7 +77,7 @@ class CustomSkillsForm extends FormApplication {
 
     let newSkills = {};
     let newAbilities = {};
-    let newSettings = mergeObject(oldSettings, Form);
+    let newSettings = foundry.utils.mergeObject(oldSettings, Form);
 
     // check if skills have been removed
     if (Form.skillNum < CustomSkills.countObject(oldSettings.customSkillList)) {
@@ -177,12 +178,8 @@ class CustomSkillsForm extends FormApplication {
 Hooks.on('init', () => {
   //console.log('dnd5e-custom-skills init');
   //CONFIG.debug.hooks = true;
-
   if (typeof game.dnd5e.version === 'string') {
-    dndV3 = compareVersions(game.dnd5e.version, '2.99.99') == 1;
-    console.log('SP dndversion3', dndV3);
-  } else {
-    console.log('SP isundefined version');
+    dndV3 = foundry.utils.isNewerVersion(game.dnd5e.version, '2.99.99');
   }
 
   game.settings.registerMenu(MODULE_NAME, MODULE_NAME, {
@@ -223,6 +220,7 @@ Hooks.on('init', () => {
       return results;
     }
   };
+  CustomSkills.applyToSystem();
 });
 
 /*
@@ -232,7 +230,7 @@ Hooks.on('init', () => {
 
 class CustomSkills {
   static get settings() {
-    let csSettings = mergeObject(this.defaultSettings, game.settings.get(MODULE_NAME, 'settings'));
+    let csSettings = foundry.utils.mergeObject(this.defaultSettings, game.settings.get(MODULE_NAME, 'settings'));
     // skills
     const oldSkillNum = this.countObject(csSettings.customSkillList);
     const oldAbilityNum = this.countObject(csSettings.customAbilitiesList);
@@ -244,7 +242,7 @@ class CustomSkills {
         let name = 'cus_' + n;
         skills[name] = this.getBaseSkill();
       }
-      csSettings.customSkillList = mergeObject(csSettings.customSkillList, skills);
+      csSettings.customSkillList = foundry.utils.mergeObject(csSettings.customSkillList, skills);
     } else if (csSettings.skillNum < oldSkillNum) {
       //there are less skills than before, need to delete some
       for (let n = (oldSkillNum - 1); n >= csSettings.skillNum; n--) {
@@ -260,7 +258,7 @@ class CustomSkills {
         let name = 'cua_' + n;
         abilities[name] = this.getBaseAbility(false);
       }
-      csSettings.customAbilitiesList = mergeObject(csSettings.customAbilitiesList, abilities);
+      csSettings.customAbilitiesList = foundry.utils.mergeObject(csSettings.customAbilitiesList, abilities);
     } else if (csSettings.abilitiesNum < oldAbilityNum) {
       //there are less abilities than before, need to delete some
       for (let n = (oldAbilityNum - 1); n >= csSettings.abilitiesNum; n--) {
@@ -344,7 +342,7 @@ class CustomSkills {
 
   static async updateSettings(newSettings) {
     const oldSettings = CustomSkills.settings;
-    let merged_settings = mergeObject(oldSettings, newSettings);
+    let merged_settings = foundry.utils.mergeObject(oldSettings, newSettings);
     await game.settings.set(MODULE_NAME, 'settings', merged_settings);
     return true;
   }
@@ -587,7 +585,7 @@ class CustomSkills {
           'ability': skillData.ability,
           'applied': 1
         };
-        currentSkills[s] = mergeObject(this.getBaseSkill(), newSkillClean);
+        currentSkills[s] = foundry.utils.mergeObject(this.getBaseSkill(), newSkillClean);
         countAdded++;
       }
     }
@@ -603,7 +601,7 @@ class CustomSkills {
           'ability': skillData.ability,
           'applied': 1
         };
-        currentSkills['cus_' + (n + countOldSkills)] = mergeObject(this.getBaseSkill(), newSkillClean);
+        currentSkills['cus_' + (n + countOldSkills)] = foundry.utils.mergeObject(this.getBaseSkill(), newSkillClean);
         countAdded++;
       }
     }
@@ -697,7 +695,7 @@ class CustomSkills {
       if (d == 'skills') {
         for (let sk in dataObject[d]) {
           if (typeof skills[sk] !== 'undefined') {
-            skills[sk] = mergeObject(skills[sk], dataObject[d][sk]);
+            skills[sk] = foundry.utils.mergeObject(skills[sk], dataObject[d][sk]);
             if (!modSk)
               modSk = true;
           }
@@ -705,7 +703,7 @@ class CustomSkills {
       } else if (d == 'abilities') {
         for (let ab in dataObject[d]) {
           if (typeof abilities[ab] !== 'undefined') {
-            abilities[ab] = mergeObject(abilities[ab], dataObject[d][ab]);
+            abilities[ab] = foundry.utils.mergeObject(abilities[ab], dataObject[d][ab]);
             if (!modAb)
               modAb = true;
           }
@@ -742,6 +740,7 @@ class CustomSkills {
   No modification is made to dnd5e system.
    */
   static applyToSystem() {
+    console.log('dnd-5e-custom-skills.applyToSystem');
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
 
@@ -822,11 +821,12 @@ class CustomSkills {
 
         // remove translation
         if (isFallback) {
-          if (typeof game.i18n._fallback.DND5E[abbrKey] != 'undefined')
+          if (typeof game?.i18n?._fallback?.DND5E != 'undefined' && typeof game?.i18n?._fallback?.DND5E[abbrKey] != 'undefined') {
             game.i18n._fallback.DND5E = this.removeKey(game.i18n._fallback.DND5E, abbrKey);
+          }
         } else {
           //console.log('cust',game.i18n.translations);
-          if (typeof game.i18n.translations.DND5E[abbrKey] !== 'undefined')
+          if (typeof game?.i18n.translations.DND5E[abbrKey] !== 'undefined')
             game.i18n.translations.DND5E = this.removeKey(game.i18n.translations.DND5E, abbrKey);
         }
       }
@@ -949,6 +949,7 @@ class CustomSkills {
     if (total > 0) {
       keys.forEach((key, index) => {
         let Actor = charactersToAddSkill[key];
+        Actor.update({ [`system.skills.${skillCode}`]: skillToAdd });
         Actor.reset();
       })
     }
@@ -960,7 +961,7 @@ class CustomSkills {
     if (dndV3) {
       emptyAbility = game.system.config.abilities.cha;
     } else {
-      emptyAbility = game.system.template.Actor.templates.common.abilities.cha;
+      emptyAbility = game.system.config.skills.acr;
     }
     let newAbility = foundry.utils.deepClone(emptyAbility);
     const customAbilities = CustomSkills.getCustomAbilitiesList();
@@ -1018,11 +1019,17 @@ function addLabels(app, html, data) {
   const skillList = CustomSkills.getCustomSkillList();
   const hiddenSkills = CustomSkills.getHiddenSkills();
   const hiddenAbilities = CustomSkills.getHiddenAbilities();
-  const skillRowSelector = ".skills-list .skill";
+  let skillRowSelector = ".skills-list .skill";
+  if (dndV3) {
+    skillRowSelector = "filigree-box.skills li";
+  }
 
   html.find(skillRowSelector).each(function () {
     const skillElem = $(this);
-    const skillKey = $(this).attr("data-skill");
+    let skillKey = $(this).attr("data-skill");
+    if (dndV3) {
+      skillKey = $(this).attr("data-key");
+    }
     // if this skill is created by this module..
     if (skillList.hasOwnProperty(skillKey)) {
       //add labels to existing skill
@@ -1064,7 +1071,6 @@ Hooks.on("renderActorSheet", addLabels);
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
   if (!window._isDaeActive) {
-    console.log('dnd-5e-custom-skills.applyToSystem');
     CustomSkills.applyToSystem();
   }
 });
