@@ -20,3 +20,4 @@
 - v1.2.0: dnd5e system v2.2+ compatibility. may not be compatible with previous versions
 - v1.2.1: fix a bug with new ability object in module configuration
 - v1.3.0: dnd5e v3+ compatibility
+- v1.4.1: FoundryVTT v12 compatibility
