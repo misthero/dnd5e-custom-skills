@@ -1,0 +1,23 @@
+{
+    "dnd5e-custom-skills.poptitle": "Custom Abilities & Skills 設定",
+    "dnd5e-custom-skills.form": "ボタンをクリックで設定が開きます",
+    "dnd5e-custom-skills.form-hint": "これを使用して新たな技能や能力値の追加や既存のものを隠せます",
+    "dnd5e-custom-skills.form-title": "Custom Abilities & Skills 設定",
+    "dnd5e-custom-skills.skillInput": "技能名",
+    "dnd5e-custom-skills.skillAbility": "デフォルト能力値",
+    "dnd5e-custom-skills.skillDelete": "全てのPCアクターから技能を除外",
+    "dnd5e-custom-skills.skillNumLabel": "カスタム技能の数",
+    "dnd5e-custom-skills.skillApply": "有効化",
+    "dnd5e-custom-skills.abilityApply": "有効化",
+    "dnd5e-custom-skills.abilitiesNumLabel": "カスタム能力値の数",
+    "dnd5e-custom-skills.abilityInput": "能力値名",
+    "dnd5e-custom-skills.hideSkills": "技能を隠す",
+    "dnd5e-custom-skills.hideAbilities": "能力値を隠す",
+    "dnd5e-custom-skills.save": "ワールドに変更を適用",
+    "dnd5e-custom-skills.reset": "リセット",
+    "dnd5e-custom-skills.afterReset": "リセット後に「ワールドに変更を適用」をクリックしてください。",
+    "dnd5e-custom-skills.updateDone": "更新完了。",
+    "dnd5e-custom-skills.abilityType": "能力値の種別",
+    "dnd5e-custom-skills.abilityTypeMental": "精神的",
+    "dnd5e-custom-skills.abilityTypePhysical": "肉体的"
+}
