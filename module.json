@@ -6,7 +6,7 @@
     "minimumCoreVersion": "0.7.6",
     "compatibleCoreVersion": "9.280",
     "url": "https://github.com/misthero/dnd5e-custom-skills/tree/release/FoundryV9-Compatible",
-    "manifest": "https://github.com/misthero/dnd5e-custom-skills/blob/release/FoundryV9-Compatible/module.json",
+    "manifest": "https://raw.githubusercontent.com/misthero/dnd5e-custom-skills/release/FoundryV9-Compatible/module.json",
     "download": "https://github.com/misthero/dnd5e-custom-skills/archive/refs/heads/release/FoundryV9-Compatible.zip",
     "system": [
         "dnd5e"
