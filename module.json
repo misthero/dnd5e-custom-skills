@@ -2,13 +2,15 @@
     "name": "dnd5e-custom-skills",
     "title": "5e - Custom Abilities & Skills",
     "description": "FoundryVTT module for adding new character skills and abilities",
-    "version": "1.0.8",
+    "version": "1.0.8.1",
     "minimumCoreVersion": "0.7.6",
     "compatibleCoreVersion": "9.280",
-    "url": "https://github.com/misthero/dnd5e-custom-skills",
-    "manifest": "https://raw.githubusercontent.com/misthero/dnd5e-custom-skills/main/module.json",
-    "download": "https://github.com/misthero/dnd5e-custom-skills/archive/main.zip",
-    "system": ["dnd5e"],
+    "url": "https://github.com/misthero/dnd5e-custom-skills/tree/release/FoundryV9-Compatible",
+    "manifest": "https://github.com/misthero/dnd5e-custom-skills/blob/release/FoundryV9-Compatible/module.json",
+    "download": "https://github.com/misthero/dnd5e-custom-skills/archive/refs/heads/release/FoundryV9-Compatible.zip",
+    "system": [
+        "dnd5e"
+    ],
     "includes": [
         "./assets/**",
         "./lang/**",
@@ -17,15 +19,20 @@
         "./templates/**",
         "./module.json"
     ],
-    "authors": [{
-        "name": "misthero",
-        "url": "https://github.com/misthero"
-    }],
+    "authors": [
+        {
+            "name": "misthero",
+            "url": "https://github.com/misthero"
+        }
+    ],
     "esmodules": [
         "./dnd5e-custom-skills.js"
     ],
-    "styles": ["css/styles.css"],
-    "languages": [{
+    "styles": [
+        "css/styles.css"
+    ],
+    "languages": [
+        {
             "lang": "en",
             "name": "English",
             "path": "lang/en.json"
