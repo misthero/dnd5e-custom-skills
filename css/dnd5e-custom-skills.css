@@ -147,6 +147,12 @@ form .form-group.hide-skills input {
   display: none;
 }
 
+/** tidy **/
+.tidy5e-sheet .actor-stats .disabled,
+.tidy5e-sheet .actor-stats .disabled+.vertical-line-separator {
+  display: none;
+}
+
 #skills-form button.requireSave {
   background: orange;
 }

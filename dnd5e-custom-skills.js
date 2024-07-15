@@ -1015,6 +1015,14 @@ function addLabels(app, html, data) {
     html.find(".skills-list").addClass("custom-skills");
     html.find(".ability-scores").addClass("custom-abilities");
   }
+  let sheetVersion = '';
+  if (html.hasClass('dnd5e2')) {
+    sheetVersion = 'dnd2';
+  } else if (html.hasClass('dnd5e')) {
+    sheetVersion = 'legacy';
+  } else if (html.hasClass('tidy5e-sheet')) {
+    sheetVersion = 'tidy';
+  }
 
   const skillList = CustomSkills.getCustomSkillList();
   const hiddenSkills = CustomSkills.getHiddenSkills();
@@ -1027,7 +1035,7 @@ function addLabels(app, html, data) {
   html.find(skillRowSelector).each(function () {
     const skillElem = $(this);
     let skillKey = $(this).attr("data-skill");
-    if (dndV3) {
+    if (sheetVersion == 'legacy') {
       skillKey = $(this).attr("data-key");
     }
     // if this skill is created by this module..
@@ -1041,7 +1049,7 @@ function addLabels(app, html, data) {
   /** hide skills **/
   for (let hs in hiddenSkills) {
     if (hiddenSkills[hs]) {
-      if (dndV3) {
+      if (sheetVersion == 'dnd2') {
         $('.skills li[data-key="' + hs + '"]', html).addClass('disabled');
       } else {
         $('.skills-list .skill[data-key="' + hs + '"]', html).addClass('disabled');
@@ -1052,10 +1060,12 @@ function addLabels(app, html, data) {
   /** hide abilities **/
   for (let ha in hiddenAbilities) {
     if (hiddenAbilities[ha]) {
-      if (dndV3) {
+      if (sheetVersion == 'dnd2') {
         $('.ability-scores .ability-score[data-ability ="' + ha + '"]', html).addClass('disabled');
-      } else {
+      } else if (sheetVersion == 'legacy') {
         $('.ability-scores .ability[data-ability ="' + ha + '"]', html).addClass('disabled');
+      } else if (sheetVersion == 'tidy') {
+        $('.actor-stats .wrapper[data-ability ="' + ha + '"]', html).parent().addClass('disabled');
       }
 
     }

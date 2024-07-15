@@ -21,3 +21,4 @@
 - v1.2.1: fix a bug with new ability object in module configuration
 - v1.3.0: dnd5e v3+ compatibility
 - v1.4.1: FoundryVTT v12 compatibility
+- v1.4.20: Restore legacy sheet compatibility, add new tidy sheet compatibility
