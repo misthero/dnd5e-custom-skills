@@ -1007,20 +1007,22 @@ class CustomSkills {
 }
 
 function addLabels(app, html, data) {
+  // get container app from app.id and not from html since it changes in dndv3 when editing.
+  var current_sheet = $('#' + app.id);
 
   //dndbeyond character sheet is unfixable, don't touch it.
-  if (!html.hasClass('dndbcs')) {
+  if (!current_sheet.hasClass('dndbcs')) {
     // new classes for ui and css purposes
-    html.addClass("cs");
-    html.find(".skills-list").addClass("custom-skills");
-    html.find(".ability-scores").addClass("custom-abilities");
+    current_sheet.addClass("cs");
+    current_sheet.find(".skills-list").addClass("custom-skills");
+    current_sheet.find(".ability-scores").addClass("custom-abilities");
   }
   let sheetVersion = '';
-  if (html.hasClass('dnd5e2')) {
+  if (current_sheet.hasClass('dnd5e2')) {
     sheetVersion = 'dnd2';
-  } else if (html.hasClass('dnd5e')) {
+  } else if (current_sheet.hasClass('dnd5e')) {
     sheetVersion = 'legacy';
-  } else if (html.hasClass('tidy5e-sheet')) {
+  } else if (current_sheet.hasClass('tidy5e-sheet')) {
     sheetVersion = 'tidy';
   }
 
@@ -1032,7 +1034,7 @@ function addLabels(app, html, data) {
     skillRowSelector = "filigree-box.skills li";
   }
 
-  html.find(skillRowSelector).each(function () {
+  current_sheet.find(skillRowSelector).each(function () {
     const skillElem = $(this);
     let skillKey = $(this).attr("data-skill");
     if (sheetVersion == 'legacy') {
@@ -1050,9 +1052,9 @@ function addLabels(app, html, data) {
   for (let hs in hiddenSkills) {
     if (hiddenSkills[hs]) {
       if (sheetVersion == 'dnd2') {
-        $('.skills li[data-key="' + hs + '"]', html).addClass('disabled');
+        $('.skills li[data-key="' + hs + '"]', current_sheet).addClass('disabled');
       } else {
-        $('.skills-list .skill[data-key="' + hs + '"]', html).addClass('disabled');
+        $('.skills-list .skill[data-key="' + hs + '"]', current_sheet).addClass('disabled');
       }
     }
   }
@@ -1061,11 +1063,11 @@ function addLabels(app, html, data) {
   for (let ha in hiddenAbilities) {
     if (hiddenAbilities[ha]) {
       if (sheetVersion == 'dnd2') {
-        $('.ability-scores .ability-score[data-ability ="' + ha + '"]', html).addClass('disabled');
+        $('.ability-scores .ability-score[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
       } else if (sheetVersion == 'legacy') {
-        $('.ability-scores .ability[data-ability ="' + ha + '"]', html).addClass('disabled');
+        $('.ability-scores .ability[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
       } else if (sheetVersion == 'tidy') {
-        $('.actor-stats .wrapper[data-ability ="' + ha + '"]', html).parent().addClass('disabled');
+        $('.actor-stats .wrapper[data-ability ="' + ha + '"]', current_sheet).parent().addClass('disabled');
       }
 
     }
