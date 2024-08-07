@@ -140,6 +140,7 @@ form .form-group.hide-skills input {
 .sheet.actor .ability-scores .ability.disabled,
 /** dnd v3 **/
 .sheet.actor.character .ability-scores .ability-score.disabled,
+.dnd5e2.sheet.actor.character .sheet-body .saves>ul>li.disabled,
 .sheet.actor.character ul.skills-list li.skill.disabled,
 /** dnd v3 **/
 .sheet.actor.character .sheet-body .skills>ul>li.disabled,

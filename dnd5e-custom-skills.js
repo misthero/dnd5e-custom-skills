@@ -42,7 +42,8 @@ class CustomSkillsForm extends FormApplication {
       id: 'skills-form',
       template: `modules/${MODULE_NAME}/templates/skills-config.html`,
       width: 700,
-      closeOnSubmit: false
+      closeOnSubmit: false,
+      requiresReload: true
     });
   }
 
@@ -59,6 +60,8 @@ class CustomSkillsForm extends FormApplication {
     this.reset = false;
     return data;
   }
+
+
 
   onReset() {
     this.reset = true;
@@ -114,6 +117,8 @@ class CustomSkillsForm extends FormApplication {
     CustomSkills.applyToSystem();
 
     await CustomSkills.updateActors(newSkills, newAbilities);
+
+    SettingsConfig.reloadConfirm({ world: true });
 
     return this.render();
   }
@@ -800,25 +805,10 @@ class CustomSkills {
       abbrKey = this.getI18nKey(a);
       if (customAbilities[a].applied) {
         systemAbilities[a] = this.getBaseAbility(customAbilities[a].applied, customAbilities[a].label);
-        // systemAbilityAbbr[a] = label.slice(0, 3).toLowerCase();
-        /*if (isFallback) {
-          game.i18n._fallback.DND5E[abbrKey] = systemAbilityAbbr[a];
-        } else {
-          game.i18n.translations.DND5E[abbrKey] = systemAbilityAbbr[a];
-        }*/
         if (window._isDaeActive) {
           this.daeAutoFields(a);
         }
       } else {
-        // not applied, we should remove it.
-        /*if (typeof systemAbilities[a] != "undefined") {
-          systemAbilities = this.removeKey(systemAbilities, a);
-        }
-        if (typeof systemAbilityAbbr[a] != "undefined") {
-          systemAbilityAbbr = this.removeKey(systemAbilityAbbr, a);
-        }
-        */
-
         // remove translation
         if (isFallback) {
           if (typeof game?.i18n?._fallback?.DND5E != 'undefined' && typeof game?.i18n?._fallback?.DND5E[abbrKey] != 'undefined') {
@@ -868,7 +858,6 @@ class CustomSkills {
     // clean leftovers on players actors
     await CustomSkills.cleanActors();
     ui.notifications.info(game.i18n.localize(MODULE_NAME + '.updateDone'));
-
     return true;
   }
 
@@ -1064,6 +1053,7 @@ function addLabels(app, html, data) {
     if (hiddenAbilities[ha]) {
       if (sheetVersion == 'dnd2') {
         $('.ability-scores .ability-score[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
+        $('.saves li[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
       } else if (sheetVersion == 'legacy') {
         $('.ability-scores .ability[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
       } else if (sheetVersion == 'tidy') {

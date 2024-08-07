@@ -23,3 +23,4 @@
 - v1.4.1: FoundryVTT v12 compatibility
 - v1.4.20: Restore legacy sheet compatibility, add new tidy sheet compatibility
 - v1.4.30: fix bug with hidden skills and abilities when switching to edit mode in dndv3 sheet
+- v1.4.35: fix bug with hidden saves. Fix missing reload confirm.
