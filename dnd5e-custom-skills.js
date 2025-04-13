@@ -295,6 +295,8 @@ class CustomSkills {
       abilities[name] = this.getBaseAbility(false);
     };
 
+    //console.log('dnd5e-custom-skills.defaultSettings', skills, abilities);
+
     return {
       customSkillList: skills,
       skillNum: skillNum,
@@ -326,6 +328,8 @@ class CustomSkills {
       cleanAbility = foundry.utils.deepClone(game.system.template.Actor.templates.common.abilities.cha);
     }
 
+    //console.log('dnd5e-custom-skills.getBaseAbility', cleanAbility);
+
     cleanAbility.type = "physical";
     cleanAbility.reference = "";
     if (typeof applied === 'undefined') {
@@ -334,10 +338,13 @@ class CustomSkills {
       cleanAbility.applied = applied;
     }
 
-    if (typeof label != 'undefined') {
+    if (typeof label === 'undefined') {
+      // keep default label
+    } else {
       cleanAbility.label = label;
       cleanAbility.abbreviation = label.slice(0, 3).toLowerCase();
     }
+
     return cleanAbility;
   }
 
@@ -745,7 +752,7 @@ class CustomSkills {
   No modification is made to dnd5e system.
    */
   static applyToSystem() {
-    console.log('dnd-5e-custom-skills.applyToSystem');
+    //console.log('dnd-5e-custom-skills.applyToSystem');
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
 
@@ -1078,6 +1085,6 @@ Hooks.on("i18nInit", async () => {
 });
 
 Hooks.on("DAE.setupComplete", async () => {
-  console.log('dnd-5e-custom-skills.DAE.STARTED');
+  //console.log('dnd-5e-custom-skills.DAE.STARTED');
   CustomSkills.applyToSystem();
 });
