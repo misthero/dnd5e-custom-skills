@@ -38,7 +38,8 @@ jobs:
       # Create zip file.
       - name: Create ZIP archive
         run: zip -r ./${{env.MODULE_ID}}.zip 
-          module.json 
+          module.json
+          dnd5e-custom-skills.js 
           README.md 
           LICENSE 
           CHANGELOG.md 
