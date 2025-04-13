@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.4.38]
+## [1.4.40]
 
 ### Bug Fixes
 
