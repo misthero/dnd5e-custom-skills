@@ -61,8 +61,6 @@ class CustomSkillsForm extends FormApplication {
     return data;
   }
 
-
-
   onReset() {
     this.reset = true;
     game.settings.set(MODULE_NAME, 'settings', {});
@@ -91,7 +89,7 @@ class CustomSkillsForm extends FormApplication {
           count++;
         }
       }
-      newSettings.customAbilitiesList = newSkills;
+      newSettings.customSkillList = newSkills;
     } else {
       newSkills = Form.customSkillList;
     }
@@ -116,9 +114,11 @@ class CustomSkillsForm extends FormApplication {
     // modify system variables
     CustomSkills.applyToSystem();
 
-    await CustomSkills.updateActors(newSkills, newAbilities);
+    //await CustomSkills.updateActors(newSkills, newAbilities);
+    // clean leftovers on players actors
+    await CustomSkills.cleanActors();
 
-    SettingsConfig.reloadConfirm({ world: true });
+    foundry.applications.settings.SettingsConfig.reloadConfirm({ world: true });
 
     return this.render();
   }
@@ -309,6 +309,7 @@ class CustomSkills {
 
   static getBaseSkill() {
     let skill;
+
     if (dndV3) {
       skill = foundry.utils.deepClone(game.system.config.skills.acr);
       skill.icon = "";
@@ -316,6 +317,8 @@ class CustomSkills {
     } else {
       skill = foundry.utils.deepClone(game.system.template.Actor.templates.creature.skills.acr);
     }
+
+    //console.log('dnd5e-custom-skills.getBaseSkill', skill);
     return skill;
 
   }
@@ -829,6 +832,7 @@ class CustomSkills {
       }
     }
 
+
     // update system config
     game.dnd5e.config.skills = this._sortObject(systemSkills, 'label');
     game.dnd5e.config.abilities = systemAbilities;
@@ -837,17 +841,42 @@ class CustomSkills {
 
   /* helper function to sort objects converting to array first**/
   static _sortObject(object, attribute) {
-    let sort, obj_array = [];
-    let result = {};
+    if (typeof attribute === 'undefined') return object;
 
-    if (typeof attribute == 'undefined')
-      return object;
+    // Convert object to array of [key, value] pairs
+    const entries = Object.entries(object);
 
-    obj_array = Object.entries(object).map(([key, obj]) => ({ key, ...obj }));
-    sort = obj_array.sort((a, b) => a[attribute].localeCompare(b[attribute]));
-    result = sort.reduce((obj, item) => Object.assign(obj, { [item.key]: item }, delete item.key), {});
+    // Sort by the localized attribute
+    entries.sort(([, a], [, b]) => {
+      const firstLabel = game.i18n.localize(a[attribute]);
+      const secondLabel = game.i18n.localize(b[attribute]);
+      return firstLabel.localeCompare(secondLabel);
+    });
 
-    return result;
+    // Rebuild a new object in sorted order
+    const sortedObj = {};
+    for (const [key, value] of entries) {
+      sortedObj[key] = value;
+    }
+    return sortedObj;
+  }
+
+  /* helper function to create a camel case string from a string */
+  static _toCamelCase(str) {
+    // Remove accents/diacritics
+    str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // Remove non-alphanumeric characters (except spaces)
+    str = str.replace(/[^a-zA-Z0-9 ]/g, "");
+    // Split by spaces, lowercase first word, capitalize others, then join
+    return str
+      .split(' ')
+      .filter(Boolean)
+      .map((word, i) =>
+        i === 0
+          ? word.toLowerCase()
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join('');
   }
 
   static async updateActors(skills, abilities) {
@@ -862,8 +891,6 @@ class CustomSkills {
         CustomSkills.addAbilityToActor(a);
     }
 
-    // clean leftovers on players actors
-    await CustomSkills.cleanActors();
     ui.notifications.info(game.i18n.localize(MODULE_NAME + '.updateDone'));
     return true;
   }
@@ -1076,6 +1103,7 @@ function addLabels(app, html, data) {
 
 /** perform some necessary operations on character sheet **/
 Hooks.on("renderActorSheet", addLabels);
+Hooks.on("renderActorSheetV2", addLabels);
 
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {

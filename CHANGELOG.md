@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.00]
+
+### Foundry v13 compatibility
+
+- added compatibility for Foundry V13 - DND v5+
+- TODO: implement applicationV2
+
 ## [1.4.40]
 
 ### Bug Fixes
