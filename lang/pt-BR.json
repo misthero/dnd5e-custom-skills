@@ -1,0 +1,11 @@
+{
+  "DND5E.CustomSkills": "Perícias Personalizadas",
+  "DND5E.CustomSkills.Settings.CustomSkills": "Perícias Personalizadas",
+  "DND5E.CustomSkills.Settings.CustomSkillsHint": "Defina as perícias adicionais que você deseja adicionar. Use uma lista separada por vírgulas. Exemplo: \"Intuição, Sobrevivência Urbana\".",
+  "DND5E.CustomSkills.Settings.HideEmptySkills": "Ocultar Perícias Vazias",
+  "DND5E.CustomSkills.Settings.HideEmptySkillsHint": "Se ativado, as perícias personalizadas que tiverem valor zero serão ocultadas na ficha do personagem.",
+  "DND5E.CustomSkills.AbilityCheckWithSkill": "{skill} ({ability}) Teste",
+  "DND5E.CustomSkills.RollDialogSkillLabel": "Perícia",
+  "DND5E.CustomSkills.RollDialogSkillPrompt": "Selecione uma perícia para este teste.",
+  "DND5E.CustomSkills.RollSkill": "Rolar {skill}"
+}

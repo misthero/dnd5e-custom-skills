@@ -48,6 +48,11 @@
       "name": "Italiano",
       "path": "lang/it.json",
       "flags": {}
+    },
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
     }
   ]
 }
