@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.01]
+
+### Adds pt-BR language support
+
+- thx to JoaoNt599
+
 ## [1.5.00]
 
 ### Foundry v13 compatibility
