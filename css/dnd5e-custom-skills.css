@@ -151,8 +151,9 @@ form .form-group.hide-skills input {
 
 /** tidy **/
 .tidy5e-sheet .actor-stats .disabled,
-.tidy5e-sheet .actor-stats .disabled+.vertical-line-separator {
-  display: none;
+.tidy5e-sheet .actor-stats .disabled+.vertical-line-separator,
+.ability.disabled {
+  display: none !important;
 }
 
 #skills-form button.requireSave {

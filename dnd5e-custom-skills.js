@@ -1027,83 +1027,94 @@ class CustomSkills {
     }
   }
 
-}
+  static async addLabels(app, html, data) {
+    // get container app from app.id and not from html since it changes in dndv3 when editing.
+    var current_sheet = $('#' + app.id);
 
-function addLabels(app, html, data) {
-  // get container app from app.id and not from html since it changes in dndv3 when editing.
-  var current_sheet = $('#' + app.id);
-
-  //dndbeyond character sheet is unfixable, don't touch it.
-  if (!current_sheet.hasClass('dndbcs')) {
-    // new classes for ui and css purposes
-    current_sheet.addClass("cs");
-    current_sheet.find(".skills-list").addClass("custom-skills");
-    current_sheet.find(".ability-scores").addClass("custom-abilities");
-  }
-  let sheetVersion = '';
-  if (current_sheet.hasClass('dnd5e2')) {
-    sheetVersion = 'dnd2';
-  } else if (current_sheet.hasClass('dnd5e')) {
-    sheetVersion = 'legacy';
-  } else if (current_sheet.hasClass('tidy5e-sheet')) {
-    sheetVersion = 'tidy';
-  }
-
-  const skillList = CustomSkills.getCustomSkillList();
-  const hiddenSkills = CustomSkills.getHiddenSkills();
-  const hiddenAbilities = CustomSkills.getHiddenAbilities();
-  let skillRowSelector = ".skills-list .skill";
-  if (dndV3) {
-    skillRowSelector = "filigree-box.skills li";
-  }
-
-  current_sheet.find(skillRowSelector).each(function () {
-    const skillElem = $(this);
-    let skillKey = $(this).attr("data-skill");
-    if (sheetVersion == 'legacy') {
-      skillKey = $(this).attr("data-key");
+    //dndbeyond character sheet is unfixable, don't touch it.
+    if (!current_sheet.hasClass('dndbcs')) {
+      // new classes for ui and css purposes
+      current_sheet.addClass("cs");
+      current_sheet.find(".skills-list").addClass("custom-skills");
+      current_sheet.find(".ability-scores").addClass("custom-abilities");
     }
-    // if this skill is created by this module..
-    if (skillList.hasOwnProperty(skillKey)) {
-      //add labels to existing skill
-      data.system.skills[skillKey].label = skillList[skillKey].label;
-      skillElem.find(".skill-name").text(skillList[skillKey].label);
+    let sheetVersion = '';
+    if (current_sheet.hasClass('dnd5e2')) {
+      sheetVersion = 'dnd2';
+    } else if (current_sheet.hasClass('dnd5e')) {
+      sheetVersion = 'legacy';
+    } else if (current_sheet.hasClass('tidy5e-sheet')) {
+      sheetVersion = 'tidy';
     }
-  });
 
-  /** hide skills **/
-  for (let hs in hiddenSkills) {
-    if (hiddenSkills[hs]) {
-      if (sheetVersion == 'dnd2') {
-        $('.skills li[data-key="' + hs + '"]', current_sheet).addClass('disabled');
-      } else {
-        $('.skills-list .skill[data-key="' + hs + '"]', current_sheet).addClass('disabled');
+    const skillList = CustomSkills.getCustomSkillList();
+    const hiddenSkills = CustomSkills.getHiddenSkills();
+    const hiddenAbilities = CustomSkills.getHiddenAbilities();
+    let skillRowSelector = ".skills-list .skill";
+    if (dndV3) {
+      skillRowSelector = "filigree-box.skills li";
+    }
+
+    current_sheet.find(skillRowSelector).each(function () {
+      const skillElem = $(this);
+      let skillKey = $(this).attr("data-skill");
+      if (sheetVersion == 'legacy') {
+        skillKey = $(this).attr("data-key");
+      }
+      // if this skill is created by this module..
+      if (skillList.hasOwnProperty(skillKey)) {
+        //add labels to existing skill
+        data.system.skills[skillKey].label = skillList[skillKey].label;
+        skillElem.find(".skill-name").text(skillList[skillKey].label);
+      }
+    });
+
+    /** hide skills **/
+    for (let hs in hiddenSkills) {
+      if (hiddenSkills[hs]) {
+        if (sheetVersion == 'dnd2') {
+          $('.skills li[data-key="' + hs + '"]', current_sheet).addClass('disabled');
+        } else {
+          console.log('hiding skill', hs, sheetVersion);
+          $('.skills-list [data-key="' + hs + '"]', current_sheet).addClass('disabled');
+          $('.skill-list [data-key="' + hs + '"]', current_sheet).addClass('disabled');
+        }
       }
     }
-  }
 
-  /** hide abilities **/
-  for (let ha in hiddenAbilities) {
-    if (hiddenAbilities[ha]) {
-      if (sheetVersion == 'dnd2') {
-        $('.ability-scores .ability-score[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
-        $('.saves li[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
-      } else if (sheetVersion == 'legacy') {
-        $('.ability-scores .ability[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
-      } else if (sheetVersion == 'tidy') {
-        $('.actor-stats .wrapper[data-ability ="' + ha + '"]', current_sheet).parent().addClass('disabled');
+    /** hide abilities **/
+    for (let ha in hiddenAbilities) {
+      if (hiddenAbilities[ha]) {
+        console.log('hiding ability', ha, sheetVersion);
+        if (sheetVersion == 'dnd2') {
+          $('.ability-scores .ability-score[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
+          $('.saves li[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
+        } else if (sheetVersion == 'legacy') {
+          $('.ability-scores .ability[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
+        } else if (sheetVersion == 'tidy') {
+          $('.actor-stats [data-ability ="' + ha + '"]', current_sheet).parent().addClass('disabled');
+          $('.sheet-header .ability.' + ha).addClass('disabled');
+
+        }
+
       }
 
     }
 
+    return (app, html, data);
   }
 
-  return (app, html, data);
 }
+
+
 
 /** perform some necessary operations on character sheet **/
-Hooks.on("renderActorSheet", addLabels);
-Hooks.on("renderActorSheetV2", addLabels);
+Hooks.on("renderActorSheet", async (app, html, data) => {
+  await CustomSkills.addLabels(app, html, data);
+});
+Hooks.on("renderActorSheetV2", async (app, html, data) => {
+  await CustomSkills.addLabels(app, html, data);
+});
 
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {

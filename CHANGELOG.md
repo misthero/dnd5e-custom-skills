@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.05]
+
+### Tidy 5e compatibility fixes
+
+- restored hidden skills in new tidy-5e sheet.
+
 ## [1.5.01]
 
 ### Adds pt-BR language support
