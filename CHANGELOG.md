@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.14]
+
+### Compatibility Update
+
+- added compatibility for Foundry V14 - DND v5+
+
 ## [1.5.05]
 
 ### Tidy 5e compatibility fixes

@@ -187,6 +187,8 @@ Hooks.on('init', () => {
     dndV3 = foundry.utils.isNewerVersion(game.dnd5e.version, '2.99.99');
   }
 
+
+
   game.settings.registerMenu(MODULE_NAME, MODULE_NAME, {
     name: MODULE_NAME + ".form",
     label: MODULE_NAME + ".form-title",
@@ -759,6 +761,14 @@ class CustomSkills {
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
 
+    /*CONFIG.DND5E.skills.backflip = {
+      label: "Backflip",
+      ability: "dex",
+      fullKey: "backflip", // Full key used in enrichers
+      reference: "Compendium.my-module…", // UUID of journal entry page for rich tooltips
+      icon: "…" // Icon used in favorites on new character sheet
+    };*/
+
     // see if we need to modify the _fallback translation for compatibility with tidy5esheet
     let isFallback = false;
     if (typeof game.i18n.translations.DND5E === 'undefined' && typeof game.i18n._fallback != 'undefined') {
@@ -797,7 +807,8 @@ class CustomSkills {
       if (customSkills[s].applied) {
         systemSkills[s] = {
           'label': customSkills[s].label,
-          'ability': customSkills[s].ability
+          'ability': customSkills[s].ability,
+          'fullKey': customSkills[s].label.toLowerCase().replace(/\s+/g, '_'),
         };
         if (window._isDaeActive) {
           this.daeAutoFields(s, true)
