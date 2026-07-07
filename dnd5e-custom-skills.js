@@ -206,10 +206,14 @@ Hooks.on('init', () => {
       CustomSkills.defaultSettings,
     type: Object,
     config: false,
-    //onChange: (x) => window.location.reload()
+    onChange: () => CustomSkills.onSettingsChanged()
   });
 
   window._isDaeActive = false;
+  // DAE auto-field registration must wait until DAE has finished its own setup
+  // (DAE.setupComplete). This flag lets applyToSystem() run early (at i18nInit,
+  // before actors are prepared) to patch the schema WITHOUT touching DAE.
+  window._daeSetupComplete = false;
   for (const mod of game.data.modules) {
     if (mod.id == "dae" && mod.active) {
       window._isDaeActive = true;
@@ -358,10 +362,35 @@ class CustomSkills {
   }
 
   static async updateSettings(newSettings) {
+    if (!game.user.isGM) {
+      ui.notifications.warn(`${MODULE_NAME}: only a GM can update custom skills settings.`);
+      return false;
+    }
+
     const oldSettings = CustomSkills.settings;
     let merged_settings = foundry.utils.mergeObject(oldSettings, newSettings);
     await game.settings.set(MODULE_NAME, 'settings', merged_settings);
     return true;
+  }
+
+  static onSettingsChanged() {
+    this.reapplyLocalRuntime();
+  }
+
+  static reapplyLocalRuntime() {
+    this.applyToSystem();
+    this.resetLocalActors();
+    this.refreshOpenSheets();
+  }
+
+  static resetLocalActors() {
+    for (const actor of this.getPlayerActors()) {
+      if (typeof actor.reset === 'function') {
+        actor.reset();
+      } else if (typeof actor.prepareData === 'function') {
+        actor.prepareData();
+      }
+    }
   }
 
   static isActorCharacter(actor) {
@@ -403,14 +432,31 @@ class CustomSkills {
     return csSettings.abilitiesNum;
   }
   static getOpenCharacterSheets() {
-    // return Object.values(ui.windows).filter(w => (w.options.baseApplication == 'ActorSheet' && w.rendered == true));
-    return Object.values(ui.windows).filter(w => (w instanceof dnd5e.applications.actor.ActorSheet5eCharacter));
+    const apps = new Set(Object.values(ui.windows ?? {}));
+    const appInstances = foundry.applications?.instances;
+
+    if (appInstances instanceof Map) {
+      for (const app of appInstances.values()) apps.add(app);
+    } else if (appInstances instanceof Set) {
+      for (const app of appInstances) apps.add(app);
+    } else if (appInstances) {
+      for (const app of Object.values(appInstances)) apps.add(app);
+    }
+
+    return Array.from(apps).filter(app => {
+      const actor = app.document ?? app.actor ?? app.options?.document;
+      return actor instanceof Actor && app.rendered !== false;
+    });
   }
   // refresh open actor sheets to view results
   static refreshOpenSheets() {
     const sheets = this.getOpenCharacterSheets();
-    sheets.forEach((sheet, index) => {
-      sheet.render();
+    sheets.forEach((sheet) => {
+      try {
+        sheet.render({ force: true });
+      } catch (error) {
+        sheet.render(true);
+      }
     });
   }
   //create abbreviation key for i18n (tidy5e sheet pull from there when showing abilities)
@@ -468,11 +514,14 @@ class CustomSkills {
   };
 
   static async _integrationUpdate(settings, apply) {
-    await this.updateSettings(settings);
+    const updated = await this.updateSettings(settings);
+    if (!updated) return false;
+
     if (apply) {
       this.applyToSystem();
       await this.resetActors();
     }
+    return true;
   }
 
   static async resetActors() {
@@ -483,7 +532,10 @@ class CustomSkills {
       Actor.reset();
     });
 
-    this.refreshOpenSheets();
+    const sheets = this.getOpenCharacterSheets();
+    if (sheets.length > 0) {
+      this.refreshOpenSheets();
+    }
 
     return true;
   }
@@ -550,7 +602,12 @@ class CustomSkills {
       };
     }
 
-    this._integrationUpdate(settings, apply);
+    const updated = await this._integrationUpdate(settings, apply);
+    if (!updated) {
+      return {
+        'error': 'Only a GM can update custom skills settings'
+      };
+    }
 
     return response;
   }
@@ -739,7 +796,12 @@ class CustomSkills {
       response.abilities = settings.customAbilitiesList;
     }
 
-    this._integrationUpdate(settings, apply);
+    const updated = await this._integrationUpdate(settings, apply);
+    if (!updated) {
+      return {
+        'error': 'Only a GM can update custom skills settings'
+      };
+    }
 
     if (modSk || modAb)
       return response;
@@ -810,7 +872,7 @@ class CustomSkills {
           'ability': customSkills[s].ability,
           'fullKey': customSkills[s].label.toLowerCase().replace(/\s+/g, '_'),
         };
-        if (window._isDaeActive) {
+        if (window._isDaeActive && window._daeSetupComplete) {
           this.daeAutoFields(s, true)
         }
       } else {
@@ -826,7 +888,7 @@ class CustomSkills {
       abbrKey = this.getI18nKey(a);
       if (customAbilities[a].applied) {
         systemAbilities[a] = this.getBaseAbility(customAbilities[a].applied, customAbilities[a].label);
-        if (window._isDaeActive) {
+        if (window._isDaeActive && window._daeSetupComplete) {
           this.daeAutoFields(a);
         }
       } else {
@@ -847,7 +909,51 @@ class CustomSkills {
     // update system config
     game.dnd5e.config.skills = this._sortObject(systemSkills, 'label');
     game.dnd5e.config.abilities = systemAbilities;
+
+    // Ensure the DND5E actor schema accepts the dynamic custom mapping keys.
+    this._patchActorMappingFieldInitialKeys('skills', game.dnd5e.config.skills);
+    this._patchActorMappingFieldInitialKeys('abilities', game.dnd5e.config.abilities);
+
     // game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
+  }
+
+  static _patchActorMappingFieldInitialKeys(fieldName, configKeys) {
+    const customKeys = Object.keys(configKeys).filter(k => k.startsWith('cus_') || k.startsWith('cua_'));
+    if (customKeys.length === 0) return;
+
+    let patchedAny = false;
+    for (const actorType of ['character', 'npc']) {
+      const model = CONFIG.Actor?.dataModels?.[actorType];
+      const field = model?.schema?.fields?.[fieldName] ?? model?.schema?.[fieldName];
+      if (!field) continue;
+      patchedAny = true;
+
+      const initialKeys = field.initialKeys;
+      if (Array.isArray(initialKeys)) {
+        const merged = [...initialKeys];
+        for (const key of customKeys) {
+          if (!merged.includes(key)) merged.push(key);
+        }
+        field.initialKeys = merged;
+      } else if (initialKeys && typeof initialKeys === 'object') {
+        for (const key of customKeys) {
+          if (!(key in initialKeys)) {
+            initialKeys[key] = configKeys[key] ?? true;
+          }
+        }
+        field.initialKeys = initialKeys;
+      } else {
+        const newKeys = {};
+        for (const key of customKeys) {
+          newKeys[key] = configKeys[key] ?? true;
+        }
+        field.initialKeys = newKeys;
+      }
+    }
+
+    if (!patchedAny) {
+      console.warn(`${MODULE_NAME}: could not locate the '${fieldName}' MappingField on the character/npc data models. Custom keys may be stripped from actor data — the dnd5e schema layout may have changed.`);
+    }
   }
 
   /* helper function to sort objects converting to array first**/
@@ -1129,12 +1235,29 @@ Hooks.on("renderActorSheetV2", async (app, html, data) => {
 
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
-  if (!window._isDaeActive) {
-    CustomSkills.applyToSystem();
-  }
+  // Runs for ALL worlds (including DAE): this is BEFORE any actor data is
+  // prepared, so patching the DataModel schema (initialKeys) here makes the
+  // custom skills/abilities survive Foundry's single native prepareData pass.
+  // No actor reset is needed as a result. DAE auto-field registration is
+  // deferred (window._daeSetupComplete is still false), so this does not touch
+  // the not-yet-ready DAE global.
+  CustomSkills.applyToSystem();
 });
 
 Hooks.on("DAE.setupComplete", async () => {
   //console.log('dnd-5e-custom-skills.DAE.STARTED');
+  // DAE is ready now: re-run applyToSystem so DAE auto-fields get registered.
+  // Actors were already prepared correctly against the schema patched at
+  // i18nInit, so we deliberately do NOT reset every world actor here (that
+  // full-world re-preparation was the world-load slowdown).
+  window._daeSetupComplete = true;
+  CustomSkills.applyToSystem();
+});
+
+Hooks.once("ready", async () => {
+  // Idempotent, cheap re-affirm of the system config + schema patch. No
+  // per-actor work: actor data was already prepared during load. Reapplying
+  // the full runtime (which resets every actor) only belongs to the live
+  // settings-change path (onSettingsChanged), not to world load.
   CustomSkills.applyToSystem();
 });
