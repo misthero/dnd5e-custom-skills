@@ -206,7 +206,7 @@ Hooks.on('init', () => {
       CustomSkills.defaultSettings,
     type: Object,
     config: false,
-    //onChange: (x) => window.location.reload()
+    onChange: () => CustomSkills.onSettingsChanged()
   });
 
   window._isDaeActive = false;
@@ -358,10 +358,35 @@ class CustomSkills {
   }
 
   static async updateSettings(newSettings) {
+    if (!game.user.isGM) {
+      ui.notifications.warn(`${MODULE_NAME}: only a GM can update custom skills settings.`);
+      return false;
+    }
+
     const oldSettings = CustomSkills.settings;
     let merged_settings = foundry.utils.mergeObject(oldSettings, newSettings);
     await game.settings.set(MODULE_NAME, 'settings', merged_settings);
     return true;
+  }
+
+  static onSettingsChanged() {
+    this.reapplyLocalRuntime();
+  }
+
+  static reapplyLocalRuntime() {
+    this.applyToSystem();
+    this.resetLocalActors();
+    this.refreshOpenSheets();
+  }
+
+  static resetLocalActors() {
+    for (const actor of this.getPlayerActors()) {
+      if (typeof actor.reset === 'function') {
+        actor.reset();
+      } else if (typeof actor.prepareData === 'function') {
+        actor.prepareData();
+      }
+    }
   }
 
   static isActorCharacter(actor) {
@@ -403,14 +428,31 @@ class CustomSkills {
     return csSettings.abilitiesNum;
   }
   static getOpenCharacterSheets() {
-    // return Object.values(ui.windows).filter(w => (w.options.baseApplication == 'ActorSheet' && w.rendered == true));
-    return Object.values(ui.windows).filter(w => (w instanceof dnd5e.applications.actor.ActorSheet5eCharacter));
+    const apps = new Set(Object.values(ui.windows ?? {}));
+    const appInstances = foundry.applications?.instances;
+
+    if (appInstances instanceof Map) {
+      for (const app of appInstances.values()) apps.add(app);
+    } else if (appInstances instanceof Set) {
+      for (const app of appInstances) apps.add(app);
+    } else if (appInstances) {
+      for (const app of Object.values(appInstances)) apps.add(app);
+    }
+
+    return Array.from(apps).filter(app => {
+      const actor = app.document ?? app.actor ?? app.options?.document;
+      return actor instanceof Actor && app.rendered !== false;
+    });
   }
   // refresh open actor sheets to view results
   static refreshOpenSheets() {
     const sheets = this.getOpenCharacterSheets();
-    sheets.forEach((sheet, index) => {
-      sheet.render();
+    sheets.forEach((sheet) => {
+      try {
+        sheet.render({ force: true });
+      } catch (error) {
+        sheet.render(true);
+      }
     });
   }
   //create abbreviation key for i18n (tidy5e sheet pull from there when showing abilities)
@@ -468,11 +510,14 @@ class CustomSkills {
   };
 
   static async _integrationUpdate(settings, apply) {
-    await this.updateSettings(settings);
+    const updated = await this.updateSettings(settings);
+    if (!updated) return false;
+
     if (apply) {
       this.applyToSystem();
       await this.resetActors();
     }
+    return true;
   }
 
   static async resetActors() {
@@ -483,7 +528,10 @@ class CustomSkills {
       Actor.reset();
     });
 
-    this.refreshOpenSheets();
+    const sheets = this.getOpenCharacterSheets();
+    if (sheets.length > 0) {
+      this.refreshOpenSheets();
+    }
 
     return true;
   }
@@ -550,7 +598,12 @@ class CustomSkills {
       };
     }
 
-    this._integrationUpdate(settings, apply);
+    const updated = await this._integrationUpdate(settings, apply);
+    if (!updated) {
+      return {
+        'error': 'Only a GM can update custom skills settings'
+      };
+    }
 
     return response;
   }
@@ -739,7 +792,12 @@ class CustomSkills {
       response.abilities = settings.customAbilitiesList;
     }
 
-    this._integrationUpdate(settings, apply);
+    const updated = await this._integrationUpdate(settings, apply);
+    if (!updated) {
+      return {
+        'error': 'Only a GM can update custom skills settings'
+      };
+    }
 
     if (modSk || modAb)
       return response;
@@ -847,7 +905,45 @@ class CustomSkills {
     // update system config
     game.dnd5e.config.skills = this._sortObject(systemSkills, 'label');
     game.dnd5e.config.abilities = systemAbilities;
+
+    // Ensure the DND5E actor schema accepts the dynamic custom mapping keys.
+    this._patchActorMappingFieldInitialKeys('skills', game.dnd5e.config.skills);
+    this._patchActorMappingFieldInitialKeys('abilities', game.dnd5e.config.abilities);
+
     // game.dnd5e.config.abilityAbbreviations = systemAbilityAbbr;
+  }
+
+  static _patchActorMappingFieldInitialKeys(fieldName, configKeys) {
+    const customKeys = Object.keys(configKeys).filter(k => k.startsWith('cus_') || k.startsWith('cua_'));
+    if (customKeys.length === 0) return;
+
+    for (const actorType of ['character', 'npc']) {
+      const model = CONFIG.Actor?.dataModels?.[actorType];
+      const field = model?.schema?.fields?.[fieldName] ?? model?.schema?.[fieldName];
+      if (!field) continue;
+
+      const initialKeys = field.initialKeys;
+      if (Array.isArray(initialKeys)) {
+        const merged = [...initialKeys];
+        for (const key of customKeys) {
+          if (!merged.includes(key)) merged.push(key);
+        }
+        field.initialKeys = merged;
+      } else if (initialKeys && typeof initialKeys === 'object') {
+        for (const key of customKeys) {
+          if (!(key in initialKeys)) {
+            initialKeys[key] = configKeys[key] ?? true;
+          }
+        }
+        field.initialKeys = initialKeys;
+      } else {
+        const newKeys = {};
+        for (const key of customKeys) {
+          newKeys[key] = configKeys[key] ?? true;
+        }
+        field.initialKeys = newKeys;
+      }
+    }
   }
 
   /* helper function to sort objects converting to array first**/
@@ -1136,5 +1232,12 @@ Hooks.on("i18nInit", async () => {
 
 Hooks.on("DAE.setupComplete", async () => {
   //console.log('dnd-5e-custom-skills.DAE.STARTED');
-  CustomSkills.applyToSystem();
+  CustomSkills.reapplyLocalRuntime();
+});
+
+Hooks.once("ready", async () => {
+  CustomSkills.reapplyLocalRuntime();
+
+  // Repeat once after late configuration changes from the system or other modules.
+  setTimeout(() => CustomSkills.reapplyLocalRuntime(), 1000);
 });
