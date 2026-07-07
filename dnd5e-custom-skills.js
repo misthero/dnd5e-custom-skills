@@ -210,6 +210,10 @@ Hooks.on('init', () => {
   });
 
   window._isDaeActive = false;
+  // DAE auto-field registration must wait until DAE has finished its own setup
+  // (DAE.setupComplete). This flag lets applyToSystem() run early (at i18nInit,
+  // before actors are prepared) to patch the schema WITHOUT touching DAE.
+  window._daeSetupComplete = false;
   for (const mod of game.data.modules) {
     if (mod.id == "dae" && mod.active) {
       window._isDaeActive = true;
@@ -868,7 +872,7 @@ class CustomSkills {
           'ability': customSkills[s].ability,
           'fullKey': customSkills[s].label.toLowerCase().replace(/\s+/g, '_'),
         };
-        if (window._isDaeActive) {
+        if (window._isDaeActive && window._daeSetupComplete) {
           this.daeAutoFields(s, true)
         }
       } else {
@@ -884,7 +888,7 @@ class CustomSkills {
       abbrKey = this.getI18nKey(a);
       if (customAbilities[a].applied) {
         systemAbilities[a] = this.getBaseAbility(customAbilities[a].applied, customAbilities[a].label);
-        if (window._isDaeActive) {
+        if (window._isDaeActive && window._daeSetupComplete) {
           this.daeAutoFields(a);
         }
       } else {
@@ -917,10 +921,12 @@ class CustomSkills {
     const customKeys = Object.keys(configKeys).filter(k => k.startsWith('cus_') || k.startsWith('cua_'));
     if (customKeys.length === 0) return;
 
+    let patchedAny = false;
     for (const actorType of ['character', 'npc']) {
       const model = CONFIG.Actor?.dataModels?.[actorType];
       const field = model?.schema?.fields?.[fieldName] ?? model?.schema?.[fieldName];
       if (!field) continue;
+      patchedAny = true;
 
       const initialKeys = field.initialKeys;
       if (Array.isArray(initialKeys)) {
@@ -943,6 +949,10 @@ class CustomSkills {
         }
         field.initialKeys = newKeys;
       }
+    }
+
+    if (!patchedAny) {
+      console.warn(`${MODULE_NAME}: could not locate the '${fieldName}' MappingField on the character/npc data models. Custom keys may be stripped from actor data — the dnd5e schema layout may have changed.`);
     }
   }
 
@@ -1225,19 +1235,29 @@ Hooks.on("renderActorSheetV2", async (app, html, data) => {
 
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
-  if (!window._isDaeActive) {
-    CustomSkills.applyToSystem();
-  }
+  // Runs for ALL worlds (including DAE): this is BEFORE any actor data is
+  // prepared, so patching the DataModel schema (initialKeys) here makes the
+  // custom skills/abilities survive Foundry's single native prepareData pass.
+  // No actor reset is needed as a result. DAE auto-field registration is
+  // deferred (window._daeSetupComplete is still false), so this does not touch
+  // the not-yet-ready DAE global.
+  CustomSkills.applyToSystem();
 });
 
 Hooks.on("DAE.setupComplete", async () => {
   //console.log('dnd-5e-custom-skills.DAE.STARTED');
-  CustomSkills.reapplyLocalRuntime();
+  // DAE is ready now: re-run applyToSystem so DAE auto-fields get registered.
+  // Actors were already prepared correctly against the schema patched at
+  // i18nInit, so we deliberately do NOT reset every world actor here (that
+  // full-world re-preparation was the world-load slowdown).
+  window._daeSetupComplete = true;
+  CustomSkills.applyToSystem();
 });
 
 Hooks.once("ready", async () => {
-  CustomSkills.reapplyLocalRuntime();
-
-  // Repeat once after late configuration changes from the system or other modules.
-  setTimeout(() => CustomSkills.reapplyLocalRuntime(), 1000);
+  // Idempotent, cheap re-affirm of the system config + schema patch. No
+  // per-actor work: actor data was already prepared during load. Reapplying
+  // the full runtime (which resets every actor) only belongs to the live
+  // settings-change path (onSettingsChanged), not to world load.
+  CustomSkills.applyToSystem();
 });
