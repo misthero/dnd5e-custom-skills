@@ -351,6 +351,7 @@ class CustomSkills {
     } else {
       cleanAbility.label = label;
       cleanAbility.abbreviation = label.slice(0, 3).toLowerCase();
+      cleanAbility.fullKey = label.toLowerCase().replace(/\s+/g, '_');
     }
 
     return cleanAbility;
