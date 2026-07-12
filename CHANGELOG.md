@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.20]
+
+### Custom Skill and Ability Mapping initialkeys
+
+- Fix disabled custom abilities remaining visible until world reload.
+- Clean up DND5E actor schema `initialKeys` for removed custom abilities.
+- Maintain live refresh for open actor sheets after custom skill/ability setting changes.
+
 ## [1.5.14]
 
 ### Compatibility Update
