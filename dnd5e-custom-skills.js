@@ -43,7 +43,7 @@ class CustomSkillsForm extends FormApplication {
       template: `modules/${MODULE_NAME}/templates/skills-config.html`,
       width: 700,
       closeOnSubmit: false,
-      requiresReload: true
+      requiresReload: false
     });
   }
 
@@ -118,7 +118,7 @@ class CustomSkillsForm extends FormApplication {
     // clean leftovers on players actors
     await CustomSkills.cleanActors();
 
-    foundry.applications.settings.SettingsConfig.reloadConfirm({ world: true });
+    //foundry.applications.settings.SettingsConfig.reloadConfirm({ world: true });
 
     return this.render();
   }
@@ -187,8 +187,6 @@ Hooks.on('init', () => {
     dndV3 = foundry.utils.isNewerVersion(game.dnd5e.version, '2.99.99');
   }
 
-
-
   game.settings.registerMenu(MODULE_NAME, MODULE_NAME, {
     name: MODULE_NAME + ".form",
     label: MODULE_NAME + ".form-title",
@@ -206,7 +204,7 @@ Hooks.on('init', () => {
       CustomSkills.defaultSettings,
     type: Object,
     config: false,
-    onChange: () => CustomSkills.onSettingsChanged()
+    onChange: () => { void CustomSkills.onSettingsChanged(); }
   });
 
   window._isDaeActive = false;
@@ -227,6 +225,11 @@ Hooks.on('init', () => {
       return results;
     }
   };
+  //CustomSkills.applyToSystem();
+});
+
+Hooks.on('ready', () => {
+  // Keep startup cheap: only apply the runtime config/schema patching.
   CustomSkills.applyToSystem();
 });
 
@@ -361,7 +364,7 @@ class CustomSkills {
     if (!game.user.isGM) {
       ui.notifications.warn(`${MODULE_NAME}: only a GM can update custom skills settings.`);
       return false;
-      
+
     }
 
     const oldSettings = CustomSkills.settings;
@@ -370,9 +373,10 @@ class CustomSkills {
     return true;
   }
 
-  static onSettingsChanged() {
+  static async onSettingsChanged() {
     this.applyToSystem();
-    this.resetLocalActors();
+    await this.cleanActors();
+    await this.resetLocalActors();
     this.refreshOpenSheets();
   }
 
@@ -441,13 +445,19 @@ class CustomSkills {
       return actor instanceof Actor && app.rendered !== false;
     });
   }
+
   // refresh open actor sheets to view results
   static refreshOpenSheets() {
     const sheets = this.getOpenCharacterSheets();
     sheets.forEach((sheet) => {
-      sheet.render({ force: true });
+      try {
+        sheet.render({ force: true });
+      } catch (error) {
+        sheet.render(true);
+      }
     });
   }
+
   //create abbreviation key for i18n (tidy5e sheet pull from there when showing abilities)
   static getI18nKey(string) {
     let key = string.charAt(0).toUpperCase() + string.slice(1);
@@ -508,6 +518,7 @@ class CustomSkills {
 
     if (apply) {
       this.applyToSystem();
+      await this.cleanActors();
       await this.resetActors();
     }
     return true;
@@ -881,6 +892,9 @@ class CustomSkills {
           this.daeAutoFields(a);
         }
       } else {
+        if (typeof systemAbilities[a] !== 'undefined') {
+          systemAbilities = this.removeKey(systemAbilities, a);
+        }
         // remove translation
         if (isFallback) {
           if (typeof game?.i18n?._fallback?.DND5E != 'undefined' && typeof game?.i18n?._fallback?.DND5E[abbrKey] != 'undefined') {
@@ -908,7 +922,6 @@ class CustomSkills {
 
   static _patchActorMappingFieldInitialKeys(fieldName, configKeys) {
     const customKeys = Object.keys(configKeys).filter(k => k.startsWith('cus_') || k.startsWith('cua_'));
-    if (customKeys.length === 0) return;
 
     for (const actorType of ['character', 'npc']) {
       const field = CONFIG.Actor?.dataModels?.[actorType]?.schema?.fields?.[fieldName];
@@ -916,18 +929,25 @@ class CustomSkills {
 
       const initialKeys = field.initialKeys;
       if (Array.isArray(initialKeys)) {
-        const merged = [...initialKeys];
+        const filtered = initialKeys.filter(key => !(/^cus_|^cua_/).test(key) || customKeys.includes(key));
         for (const key of customKeys) {
-          if (!merged.includes(key)) merged.push(key);
+          if (!filtered.includes(key)) filtered.push(key);
         }
-        field.initialKeys = merged;
+        field.initialKeys = filtered;
       } else if (initialKeys && typeof initialKeys === 'object') {
-        for (const key of customKeys) {
-          if (!(key in initialKeys)) {
-            initialKeys[key] = configKeys[key] ?? true;
+        const patched = foundry.utils.deepClone(initialKeys);
+        for (const key of Object.keys(patched)) {
+          if ((/^cus_|^cua_/).test(key) && !customKeys.includes(key)) {
+            delete patched[key];
           }
         }
-        field.initialKeys = initialKeys;
+        for (const key of customKeys) {
+          if (!(key in patched)) {
+            patched[key] = configKeys[key] ?? true;
+          }
+        }
+        field.initialKeys = patched;
+        //console.log(`Patched initialKeys for ${actorType}.${fieldName}:`, field.initialKeys);
       } else {
         const newKeys = {};
         for (const key of customKeys) {
@@ -996,6 +1016,7 @@ class CustomSkills {
 
   // remove every leftover from this module from actors charcaters
   static async cleanActors() {
+
     const characters = this.getPlayerActors();
     const skillList = this.getCustomSkillList();
     const abilityList = this.getCustomAbilitiesList();
@@ -1005,7 +1026,7 @@ class CustomSkills {
     const total = keys.length;
 
     if (total > 0) {
-      keys.forEach((key, index) => {
+      for (const key of keys) {
         let Actor = characters[key];
         let updatedDataSkills = {},
           updatedDataAbilities = {},
@@ -1052,8 +1073,16 @@ class CustomSkills {
           ...updatedDataAbilities
         };
         // finally update this actor
-        Actor.update(updatedData);
-      })
+        if (Object.keys(updatedData).length > 0) {
+          try {
+            await Actor.update(updatedData);
+          } catch (error) {
+            console.error('[dnd5e-custom-skills] actor update failed', Actor.id, error, updatedData);
+          }
+        } else {
+          console.log('[dnd5e-custom-skills] no actor update needed', Actor.id);
+        }
+      }
     }
     return true;
   }
@@ -1174,7 +1203,7 @@ class CustomSkills {
         if (sheetVersion == 'dnd2') {
           $('.skills li[data-key="' + hs + '"]', current_sheet).addClass('disabled');
         } else {
-          console.log('hiding skill', hs, sheetVersion);
+          //console.log('hiding skill', hs, sheetVersion);
           $('.skills-list [data-key="' + hs + '"]', current_sheet).addClass('disabled');
           $('.skill-list [data-key="' + hs + '"]', current_sheet).addClass('disabled');
         }
@@ -1184,7 +1213,7 @@ class CustomSkills {
     /** hide abilities **/
     for (let ha in hiddenAbilities) {
       if (hiddenAbilities[ha]) {
-        console.log('hiding ability', ha, sheetVersion);
+        //console.log('hiding ability', ha, sheetVersion);
         if (sheetVersion == 'dnd2') {
           $('.ability-scores .ability-score[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
           $('.saves li[data-ability ="' + ha + '"]', current_sheet).addClass('disabled');
