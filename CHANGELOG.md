@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.5.21]
+## [1.5.22]
 
 - Update the workflow’s package manifest link to point to the current tagged release.
 
