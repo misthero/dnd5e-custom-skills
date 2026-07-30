@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.5.21]
+
+- Update the workflow’s package manifest link to point to the current tagged release.
+
 ## [1.5.20]
 
 ### Custom Skill and Ability Mapping initialkeys
