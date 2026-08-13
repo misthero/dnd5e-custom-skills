@@ -208,6 +208,7 @@ Hooks.on('init', () => {
   });
 
   window._isDaeActive = false;
+  window._daeSetupComplete = false;
   for (const mod of game.data.modules) {
     if (mod.id == "dae" && mod.active) {
       window._isDaeActive = true;
@@ -230,7 +231,7 @@ Hooks.on('init', () => {
 
 Hooks.on('ready', () => {
   // Keep startup cheap: only apply the runtime config/schema patching.
-  CustomSkills.applyToSystem();
+  CustomSkills.applyToSystem(false);
 });
 
 /*
@@ -375,7 +376,7 @@ class CustomSkills {
   }
 
   static async onSettingsChanged() {
-    this.applyToSystem();
+    this.applyToSystem(window._daeSetupComplete);
     await this.cleanActors();
     await this.resetLocalActors();
     this.refreshOpenSheets();
@@ -518,7 +519,7 @@ class CustomSkills {
     if (!updated) return false;
 
     if (apply) {
-      this.applyToSystem();
+      this.applyToSystem(window._daeSetupComplete);
       await this.cleanActors();
       await this.resetActors();
     }
@@ -819,8 +820,8 @@ class CustomSkills {
   All changes are in memory and temporary, and should be reapplied when needed.
   No modification is made to dnd5e system.
    */
-  static applyToSystem() {
-    //console.log('dnd-5e-custom-skills.applyToSystem');
+  static applyToSystem(registerDaeFields = false) {
+    //console.log('dnd-5e-custom-skills.applyToSystem', registerDaeFields);
     let systemSkills = game.dnd5e.config.skills;
     let systemAbilities = game.dnd5e.config.abilities;
 
@@ -873,7 +874,7 @@ class CustomSkills {
           'ability': customSkills[s].ability,
           'fullKey': customSkills[s].label.toLowerCase().replace(/\s+/g, '_'),
         };
-        if (window._isDaeActive) {
+        if (window._isDaeActive && registerDaeFields) {
           this.daeAutoFields(s, true)
         }
       } else {
@@ -889,7 +890,7 @@ class CustomSkills {
       abbrKey = this.getI18nKey(a);
       if (customAbilities[a].applied) {
         systemAbilities[a] = this.getBaseAbility(customAbilities[a].applied, customAbilities[a].label);
-        if (window._isDaeActive) {
+        if (window._isDaeActive && registerDaeFields) {
           this.daeAutoFields(a);
         }
       } else {
@@ -1247,12 +1248,11 @@ Hooks.on("renderActorSheetV2", async (app, html, data) => {
 
 /* first run needs to wait for i18n (or tidy5esheet won't show labels) */
 Hooks.on("i18nInit", async () => {
-  if (!window._isDaeActive) {
-    CustomSkills.applyToSystem();
-  }
+  CustomSkills.applyToSystem(false);
 });
 
 Hooks.on("DAE.setupComplete", async () => {
   //console.log('dnd-5e-custom-skills.DAE.STARTED');
-  CustomSkills.applyToSystem();
+  window._daeSetupComplete = true;
+  CustomSkills.applyToSystem(true);
 });

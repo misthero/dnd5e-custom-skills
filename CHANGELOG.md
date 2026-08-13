@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.5.23]
+
+- Optimize initialization timing when DAE module is enabled.
+
 ## [1.5.22]
 
 - Update the workflow’s package manifest link to point to the current tagged release.
